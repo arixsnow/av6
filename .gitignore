@@ -1,0 +1,11 @@
+# Build artifacts
+build*/
+
+# Internal Documentation
+notes/
+*codebase
+*.md
+!README.md
+
+# Internal Tools
+tools/*.py
