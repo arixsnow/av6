@@ -10,6 +10,7 @@
 #include "sys/types.h"
 
 void console_init(void);
+void console_config(void);
 void console_intr(void);
 int console_filter(void);
 

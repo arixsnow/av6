@@ -17,14 +17,16 @@
  *
  * Interrupt ID ranges:
  *      0-15    SGI (Software Generated) - inter-core IPI
- *      16-31   PPI (Private Peripheral) - per-core (timer=30)
- *      32+     SPI (Shared Peripheral) - devices (UART=33)
+ *      16-31   PPI (Private Peripheral) - per-core, numbered by the tree
+ *      32+     SPI (Shared Peripheral)  - devices, numbered by the tree
  */
 
 /* Interrupt IDs */
 #define IRQ_PANIC       0           /* SGI 0: panic halt IPI */
-#define IRQ_TIMER       30          /* EL1 Physical Timer (PPI) */
-#define IRQ_UART        33          /* PL011 UART (SPI) */
+
+/* An interrupt specifier numbers within its type, not across all INTIDs. */
+#define GIC_PPI_BASE    16
+#define GIC_SPI_BASE    32
 
 /* Returned by gic_acknwlg() when no real IRQ is pending */
 #define GIC_SPURIOUS    1023

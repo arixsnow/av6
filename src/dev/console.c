@@ -12,6 +12,7 @@
  */
 
 #include "arch/arm64.h"
+#include "arch/platform.h"
 #include "dev/console.h"
 #include "dev/uart.h"
 #include "sys/fmt.h"
@@ -206,6 +207,11 @@ void console_init(void)
     uart_init();
     init_spinlock(&cons_lock, "cons");
     init_spinlock(&cons_out_lock, "cons_out");
+}
+
+void console_config(void)
+{
+    intr_register(platform.uart_irq, "uart", console_filter, console_intr);
 }
 
 /*

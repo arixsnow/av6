@@ -127,7 +127,7 @@ void mpmain(void)
 {
 
     gic_inithart();
-    timer_init();
+    timer_inithart();
 
     printk("cpu%d: online\n", cpuid());
 

@@ -6,19 +6,20 @@
 
 #include "arch/arm64.h"
 #include "arch/asid.h"
-#include "dev/console.h"
 #include "arch/dtb.h"
 #include "arch/gic.h"
-#include "sys/intr.h"
-#include "vm/kalloc.h"
-#include "sys/kio.h"
-#include "vm/kmem.h"
-#include "arch/smp.h"
-#include "sys/proc.h"
-#include "arch/timer.h"
-#include "dev/uart.h"
+#include "arch/platform.h"
 #include "arch/pmap.h"
+#include "arch/smp.h"
+#include "arch/timer.h"
+#include "dev/console.h"
+#include "dev/uart.h"
+#include "sys/intr.h"
+#include "sys/kio.h"
+#include "sys/proc.h"
+#include "vm/kalloc.h"
 #include "vm/kmalloc.h"
+#include "vm/kmem.h"
 
 #ifdef AV6_KTEST
 #include "tests/ktest.h"
@@ -47,10 +48,10 @@ void main(void)
     asid_init();
     gic_init();
     intr_init();
-    intr_register(IRQ_TIMER, "timer", timer_tick, NULL);
-    intr_register(IRQ_UART, "uart", console_filter, console_intr);
-    gic_inithart();
     timer_init();
+    console_config();
+    gic_inithart();
+    timer_inithart();
     smp_init();
     userinit();
 

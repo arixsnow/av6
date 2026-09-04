@@ -18,6 +18,7 @@
 
 #include "arch/arm64.h"
 #include "arch/dtb.h"
+#include "arch/platform.h"
 #include "arch/timer.h"
 #include "sys/intr.h"
 #include "sys/kio.h"
@@ -47,16 +48,22 @@ void timer_init(void)
     timer_interval = freq / TIMER_HZ;
     timer_ticks = 0;
 
-    /* Load the countdown */
-    asm volatile("msr cntp_tval_el0, %0" :: "r"(timer_interval));
-
-    /* Enable timer, unmask IRQ (bit 0 = enable, bit 1 = 0 (unmask)) */
-    asm volatile("msr cntp_ctl_el0, %0" :: "r"(1UL));
+    intr_register(platform.timer_irq, "timer", timer_tick, NULL);
 
     if (cpuid() == 0) {
         printk("timer: freq=%d Hz, interval=%d ticks (%d Hz)\n",
             freq, timer_interval, TIMER_HZ);
     }
+}
+
+/* CNTP is banked per CPU, so every hart arms its own */
+void timer_inithart(void)
+{
+    /* Load the countdown */
+    asm volatile("msr cntp_tval_el0, %0" :: "r"(timer_interval));
+
+    /* Enable timer, unmask IRQ (bit 0 = enable, bit 1 = 0 (unmask)) */
+    asm volatile("msr cntp_ctl_el0, %0" :: "r"(1UL));
 }
 
 int timer_tick(void)

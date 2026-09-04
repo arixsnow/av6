@@ -74,7 +74,6 @@
 #define GICR_ICENABLER0_OFF     (GICR_SGI_OFF + 0x180)
 #define GICR_IPRIORITYR_OFF(N)  (GICR_SGI_OFF + 0x400 + 4 * (N))
 
-#define GIC_SPI_BASE            32
 
 #define GICR_WAKER_PSLEEP       (1U << 1)
 #define GICR_WAKER_CASLEEP      (1U << 2)
@@ -360,15 +359,8 @@ void gic_init(void)
         gic_irq_set_affinity(i, read_mpidr());
     }
 
-    /*
-     * UART (SPI): non-secure group, flat default priority, routed to the
-     * boot CPU, then enabled. Explicit IROUTER (IRM=0, this CPU's MPIDR
-     * affinity) replaces relying on the reset value to pin IRQ 33 here.
-     */
-    gic_irq_set_group(IRQ_UART, 1);
-    gic_irq_set_priority(IRQ_UART, GIC_PRIO_DEFAULT);
-    gic_irq_set_affinity(IRQ_UART, read_mpidr());
-    gic_irq_enable(IRQ_UART);
+    gic_irq_set_priority(platform.uart_irq, GIC_PRIO_DEFAULT);
+    gic_irq_enable(platform.uart_irq);
 
     printk("gic: distributor initialized, %u SPIs\n", gic_nirq - GIC_SPI_BASE);
 }
@@ -423,13 +415,13 @@ void gic_inithart(void)
     mmio_write32(gicr + GICR_IGROUPR0_OFF, ~0U);
 
     /*
-     * Timer (PPI 30) and the panic IPI (SGI 0): flat default priority, then
+     * Timer and the panic IPI (SGI 0): flat default priority, then
      * enable. Both target this CPU's redistributor, so this runs on
      * every hart.
      */
-    gic_irq_set_priority(IRQ_TIMER, GIC_PRIO_DEFAULT);
+    gic_irq_set_priority(platform.timer_irq, GIC_PRIO_DEFAULT);
     gic_irq_set_priority(IRQ_PANIC, GIC_PRIO_DEFAULT);
-    gic_irq_enable(IRQ_TIMER);
+    gic_irq_enable(platform.timer_irq);
     gic_irq_enable(IRQ_PANIC);
 
     printk("gic: cpu%d redistributor initialized\n", cpuid());
