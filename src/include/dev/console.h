@@ -11,6 +11,7 @@
 
 void console_init(void);
 void console_config(void);
+uint32 console_rx_error(uint32 dr);
 void console_intr(void);
 int console_filter(void);
 

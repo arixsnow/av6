@@ -34,7 +34,16 @@
  */
 #define CTRL(x)         ((x) - '@')
 
-#define INPUT_BUF_SIZE  128
+#define INPUT_BUF_SIZE          128
+#define CONSOLE_DRAIN_MAX       256
+
+/* Receive faults, by cause. Caller holds cons_lock */
+static struct {
+    uint64 overrun;
+    uint64 brk;
+    uint64 parity;
+    uint64 frame;
+} cons_rx_err;
 
 static struct spinlock cons_lock;           /* input ring */
 static struct spinlock cons_out_lock;       /* the port, and cons_seq */
@@ -211,7 +220,56 @@ void console_init(void)
 
 void console_config(void)
 {
+    uart_config(platform.uart_clk);
     intr_register(platform.uart_irq, "uart", console_filter, console_intr);
+}
+
+
+uint32 console_rx_error(uint32 dr)
+{
+    if (dr & UART_DR_BE) {
+        return UART_DR_BE;
+    }
+
+    if (dr & UART_DR_PE) {
+        return UART_DR_PE;
+    }
+
+    if (dr & UART_DR_FE) {
+        return UART_DR_FE;
+    }
+
+    return 0;
+}
+
+/* Caller holds cons_lock. First of each cause is logged, the rest counted */
+static void console_rx_fault(uint32 cause)
+{
+    const char *what;
+    uint64 *n;
+
+    switch (cause) {
+        case UART_DR_OE:
+            n = &cons_rx_err.overrun;
+            what = "overrun";
+            break;
+        case UART_DR_BE:
+            n = &cons_rx_err.brk;
+            what = "break";
+            break;
+        case UART_DR_PE:
+            n = &cons_rx_err.parity;
+            what = "parity";
+            break;
+        default:
+            n = &cons_rx_err.frame;
+            what = "framing";
+            break;
+    }
+
+    if ((*n)++ == 0) {
+        pr_warn("console: %s error on receive\n", what);
+    }
 }
 
 /*
@@ -221,11 +279,31 @@ void console_config(void)
 
 void console_intr(void)
 {
-    int c;
+    uint32 cause;
+    int drained, raw, c;
 
     acquire_spinlock(&cons_lock);
 
-    while ((c = uart_getc()) >= 0) {
+    for (drained = 0; drained < CONSOLE_DRAIN_MAX; drained++) {
+        raw = uart_getc();
+
+        if (raw < 0) {
+            break;
+        }
+
+        if (raw & UART_DR_OE) {
+            console_rx_fault(UART_DR_OE);
+        }
+
+        cause = console_rx_error((uint32)raw);
+
+        if (cause != 0) {
+            console_rx_fault(cause);
+            continue;
+        }
+
+        c = raw & UART_DR_DATA;
+
         switch (c) {
             case CTRL('U'):
                 /* kill line, erase back to start of input */
@@ -253,9 +331,7 @@ void console_intr(void)
 
                     if (c == '\n' || c == CTRL('D')
                         || cons.e - cons.r == INPUT_BUF_SIZE) {
-                        /*
-                         * Complete line ready. Advance write index.
-                         */
+                        /* Complete line ready. Advance write index. */
                         cons.w = cons.e;
                         wakeup(&cons.r);
                     }
