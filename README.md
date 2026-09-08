@@ -1,12 +1,13 @@
 # AV6
 
-A small UNIX-like kernel for AArch64. It boots on QEMU `virt` and brings up four cores.
+A small UNIX-like OS for AArch64. It boots on QEMU `virt` and brings up the cores.
 Its user programs are hand-written assembly, because there is no libc yet.
 
 > I am making this as a fun OS. It will only ever support AArch64. It is never meant
 > to be big like Linux or the BSDs. It will always be a hobby operating system.
 
-It started out as a straight reimplementation of UNIX V6 for AArch64. Then it turned out
+It started out as a straight reimplementation of UNIX V6 for AArch64. And the name
+comes from combining AArch64 and V6, so A(Arch64)V6, which is AV6. Then it turned out
 that V6 has no GICv3 driver, no ASIDs, no PAN, and no slab allocator with per-CPU
 magazines. So "V6" is now mostly the name and a fond memory.
 
