@@ -225,7 +225,7 @@ skipped=${skipped%% *}
     || fail "$failed of $reported cases failed"
 [[ $reported -gt 0 || -n ${KTEST_ONLY:-} ]] \
     || fail "zero cases ran: nothing registered in .ktest"
-[[ $skipped -eq 0 ]] || warn "$skipped case(s) skipped"
+[[ $skipped -eq 0 ]] || log "$skipped case(s) not applicable to this build"
 
 bad_lines=$(grep -c '^ktest: bad ' "$LOG")
 [[ $bad_lines -eq 0 || $failed != 0 ]]  \
@@ -245,5 +245,5 @@ if evidence | grep -qE 'unhandled|did not stop'; then
     evidence | grep -nE 'unhandled|did not stop' | sed 's/^/        /'
 fi
 
-[[ ${#FAILURES[@]} -eq 0 && ${#BROKEN[@]} -eq 0 ]] && ok "$passed of $reported cases passed"
+[[ ${#FAILURES[@]} -eq 0 && ${#BROKEN[@]} -eq 0 ]] && ok "$passed passed, $skipped skipped, $failed failed"
 verdict
