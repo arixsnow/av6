@@ -5,13 +5,11 @@
  */
 
 #include "arch/arm64.h"
-#include "arch/cpu.h"
 #include "arch/stdarg.h"
 #include "dev/console.h"
 #include "sys/fmt.h"
 #include "sys/kio.h"
 #include "sys/kmsg.h"
-#include "sys/param.h"
 #include "sys/spinlock.h"
 
 /* vprintk formats here and hands the finished line to kmsg_add(). */

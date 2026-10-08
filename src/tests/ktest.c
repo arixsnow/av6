@@ -25,7 +25,6 @@
 #include "dev/console.h"
 #include "sys/fmt.h"
 #include "sys/param.h"
-#include "sys/string.h"
 #include "sys/types.h"
 #include "tests/ktest.h"
 

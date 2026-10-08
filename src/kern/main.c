@@ -8,7 +8,6 @@
 #include "arch/asid.h"
 #include "arch/dtb.h"
 #include "arch/gic.h"
-#include "arch/platform.h"
 #include "arch/pmap.h"
 #include "arch/smp.h"
 #include "arch/timer.h"

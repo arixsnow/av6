@@ -5,7 +5,6 @@
  */
 
 #include "arch/mmu.h"
-#include "sys/kassert.h"
 #include "sys/kio.h"
 #include "sys/types.h"
 #include "vm/kalloc.h"

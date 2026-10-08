@@ -29,13 +29,10 @@
  */
 
 #include "arch/arm64.h"
-#include "arch/cpu.h"
 #include "arch/mmu.h"
 #include "sys/bitstring.h"
 #include "sys/kassert.h"
-#include "sys/kio.h"
 #include "sys/list.h"
-#include "sys/param.h"
 #include "sys/spinlock.h"
 #include "sys/string.h"
 #include "sys/types.h"

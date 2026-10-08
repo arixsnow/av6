@@ -20,7 +20,6 @@
  */
 
 #include "sys/types.h"
-#include "arch/arm64.h"
 #include "arch/asid.h"
 #include "sys/elf.h"
 #include "sys/exec.h"

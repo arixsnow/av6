@@ -12,7 +12,6 @@
 #include "arch/cpu.h"
 #include "arch/trapframe.h"
 #include "sys/kassert.h"
-#include "sys/types.h"
 
 CTASSERT(offsetof(struct trapframe, x) == TF_X0, "TF_X0");
 CTASSERT(offsetof(struct trapframe, x[30]) == TF_X30, "TF_X30");

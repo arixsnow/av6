@@ -17,7 +17,6 @@
 #include "arch/gic.h"
 #include "sys/kio.h"
 #include "arch/memlayout.h"
-#include "sys/param.h"
 #include "arch/smp.h"
 #include "sys/proc.h"
 #include "arch/timer.h"

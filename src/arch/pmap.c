@@ -18,7 +18,6 @@
  * can hold entries from multiple processes without flushing
  */
 
-#include "arch/dtb.h"
 #include "arch/arm64.h"
 #include "arch/asid.h"
 #include "arch/memlayout.h"
@@ -29,7 +28,6 @@
 #include "sys/bitstring.h"
 #include "sys/kassert.h"
 #include "sys/kio.h"
-#include "sys/param.h"
 #include "sys/spinlock.h"
 #include "sys/string.h"
 #include "sys/types.h"

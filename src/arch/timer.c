@@ -17,12 +17,12 @@
  */
 
 #include "arch/arm64.h"
+#include "arch/cpu.h"
 #include "arch/dtb.h"
 #include "arch/platform.h"
 #include "arch/timer.h"
 #include "sys/intr.h"
 #include "sys/kio.h"
-#include "sys/proc.h"
 #include "sys/types.h"
 
 #define TIMER_HZ    10      /* 10 ticks per second (100ms interval) */

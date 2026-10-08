@@ -37,7 +37,6 @@
 #include "sys/cpumask.h"
 #include "arch/dtb.h"
 #include "sys/kio.h"
-#include "sys/param.h"
 #include "sys/proc.h"
 #include "sys/spinlock.h"
 #include "sys/string.h"
