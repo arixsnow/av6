@@ -7,6 +7,7 @@
 #ifndef _AV6_DTB_H_
 #define _AV6_DTB_H_
 
+#include "sys/fdt.h"
 #include "sys/types.h"
 #include "sys/param.h"
 
@@ -27,5 +28,11 @@ extern int psci_conduit;
 extern uint64 timer_freq_dtb;
 
 void dtb_init(void *dtb);
+
+int dtb_is_memory(const struct fdt *fdt, const struct fdt_node *node);
+int dtb_is_psci(const struct fdt *fdt, const struct fdt_node *node);
+int dtb_is_timer(const struct fdt *fdt, const struct fdt_node *node);
+int dtb_is_gic(const struct fdt *fdt, const struct fdt_node *node);
+int dtb_is_console(const struct fdt *fdt, const struct fdt_node *node);
 
 #endif  /* _AV6_DTB_H_ */

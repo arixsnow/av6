@@ -48,17 +48,28 @@ uint64 fdt64(const uint32 *cells)
     return ((uint64)fdt32(cells[0]) << 32) | fdt32(cells[1]);
 }
 
-uint64 fdt_cells(const uint32 *cells, int n)
+int fdt_cells(const uint32 *cells, int n, uint64 *out)
 {
-    if (n == 1) {
-        return fdt32(*cells);
+    uint64 v;
+    int i;
+
+    if (n < 1 || n > FDT_MAX_CELLS) {
+        return 0;
     }
 
-    if (n == 2) {
-        return fdt64(cells);
+    v = 0;
+
+    for (i = 0; i < n; i++) {
+        if ((v >> 32) != 0) {
+            return 0;
+        }
+
+        v = (v << 32) | fdt32(cells[i]);
     }
 
-    panic("fdt: unsupported cell count %d", n);
+    *out = v;
+
+    return 1;
 }
 
 static uint32 align4(uint32 v)
@@ -261,8 +272,21 @@ int fdt_node_is(const struct fdt_node *node, const char *name)
     return (*s == '\0' || *s == '@');
 }
 
-const void *fdt_getprop(const struct fdt *fdt, const struct fdt_node *node,
-    const char *name, uint32 *lenp)
+static int fdt_name_eq(const char *s, const char *name, uint32 len)
+{
+    uint32 i;
+
+    for (i = 0; i < len; i++) {
+        if (s[i] != name[i]) {
+            return 0;
+        }
+    }
+
+    return s[len] == '\0';
+}
+
+static const void *fdt_getprop_namelen(const struct fdt *fdt,
+    const struct fdt_node *node, const char *name, uint32 namelen, uint32 *lenp)
 {
     struct fdt_tag tag;
     const uint32 *p;
@@ -281,7 +305,7 @@ const void *fdt_getprop(const struct fdt *fdt, const struct fdt_node *node,
             return NULL;
         }
 
-        if (strcmp(tag.name, name) == 0) {
+        if (fdt_name_eq(tag.name, name, namelen)) {
             if (lenp != NULL) {
                 *lenp = tag.len;
             }
@@ -289,6 +313,12 @@ const void *fdt_getprop(const struct fdt *fdt, const struct fdt_node *node,
             return tag.value;
         }
     }
+}
+
+const void *fdt_getprop(const struct fdt *fdt, const struct fdt_node *node,
+    const char *name, uint32 *lenp)
+{
+    return fdt_getprop_namelen(fdt, node, name, (uint32)strlen(name), lenp);
 }
 
 int fdt_prop_u32(const struct fdt *fdt, const struct fdt_node *node,
@@ -321,4 +351,307 @@ int fdt_node_by_phandle(const struct fdt *fdt, uint32 phandle,
     }
 
     return 0;
+}
+
+int fdt_node_is_compatible(const struct fdt *fdt, const struct fdt_node *node,
+    const char *compat)
+{
+    const char *p;
+    uint32 len, n;
+
+    p = fdt_getprop(fdt, node, "compatible", &len);
+
+    if (p == NULL) {
+        return 0;
+    }
+
+    while (len > 0) {
+        for (n = 0; n < len && p[n] != '\0'; n++) {
+            continue;
+        }
+
+        if (n == len) {
+            break;
+        }
+
+        if (strcmp(p, compat) == 0) {
+            return 1;
+        }
+
+        n++;
+        p += n;
+        len -= n;
+    }
+
+    return 0;
+}
+
+int fdt_parent(const struct fdt *fdt, const struct fdt_node *node,
+    struct fdt_node *parent)
+{
+    struct fdt_node cur, last;
+    int ok, found;
+
+    if (node->depth <= 0) {
+        return 0;
+    }
+
+    found = 0;
+
+    for (ok = fdt_first_node(fdt, &cur); ok; ok = fdt_next_node(fdt, &cur)) {
+        if (cur.props == node->props) {
+            break;
+        }
+
+        if (cur.depth == node->depth - 1) {
+            last = cur;
+            found = 1;
+        }
+    }
+
+    if (!found) {
+        return 0;
+    }
+
+    *parent = last;
+
+    return 1;
+}
+
+static int fdt_bus_cells(const struct fdt *fdt, const struct fdt_node *bus,
+    int *acells, int *scells)
+{
+    uint32 v;
+
+    if (!fdt_prop_u32(fdt, bus, "#address-cells", &v)) {
+        return 0;
+    }
+
+    *acells = (int)v;
+
+    if (!fdt_prop_u32(fdt, bus, "#size-cells", &v)) {
+        return 0;
+    }
+
+    *scells = (int)v;
+
+    return (*acells >= 1 && *acells <= FDT_MAX_CELLS
+        && *scells >= 1 && *scells <= FDT_MAX_CELLS);
+}
+
+static int fdt_range_up(const struct fdt *fdt, const struct fdt_node *bus,
+    uint64 *addr, int na, int ns, int pna)
+{
+    const uint32 *ranges;
+    uint64 cbase, pbase, size;
+    uint32 len, one, off;
+
+    ranges = fdt_getprop(fdt, bus, "ranges", &len);
+
+    if (ranges == NULL) {
+        return 0;
+    }
+
+    if (len == 0) {
+        return 1;
+    }
+
+    one = (uint32)(na + pna + ns);
+    len >>= 2;
+
+    for (off = 0; off + one <= len; off += one) {
+        if (!fdt_cells(ranges + off, na, &cbase)
+            || !fdt_cells(ranges + off + na, pna, &pbase)
+            || !fdt_cells(ranges + off + na + pna, ns, &size)) {
+            return 0;
+        }
+
+        if (*addr >= cbase && *addr - cbase < size) {
+            if (pbase + (*addr - cbase) < pbase) {
+                return 0;
+            }
+
+            *addr = pbase + (*addr - cbase);
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int fdt_translate_reg(const struct fdt *fdt, const struct fdt_node *node,
+    uint32 index, uint64 *addrp, uint64 *sizep)
+{
+    struct fdt_node bus, up;
+    const uint32 *reg;
+    uint64 addr, size;
+    uint32 len;
+    int na, ns, pna, pns;
+
+    reg = fdt_getprop(fdt, node, "reg", &len);
+
+    if (reg == NULL || !fdt_parent(fdt, node, &bus)
+        || !fdt_bus_cells(fdt, &bus, &na, &ns)) {
+        return 0;
+    }
+
+    if ((index + 1) * ((uint32)(na + ns) << 2) > len) {
+        return 0;
+    }
+
+    reg += index * (uint32)(na + ns);
+
+    if (!fdt_cells(reg, na, &addr) || !fdt_cells(reg + na, ns, &size)) {
+        return 0;
+    }
+
+    while (fdt_parent(fdt, &bus, &up)) {
+        if (!fdt_bus_cells(fdt, &up, &pna, &pns)) {
+            return 0;
+        }
+
+        if (!fdt_range_up(fdt, &bus, &addr, na, ns, pna)) {
+            return 0;
+        }
+
+        na = pna;
+        ns = pns;
+        bus = up;
+    }
+
+    *addrp = addr;
+
+    if (sizep != NULL) {
+        *sizep = size;
+    }
+
+    return 1;
+}
+
+int fdt_node_is_available(const struct fdt *fdt, const struct fdt_node *node)
+{
+    const char *status;
+    uint32 len;
+
+    status = fdt_getprop(fdt, node, "status", &len);
+
+    if (status == NULL) {
+        return 1;
+    }
+
+    if (len == 0 || status[len - 1] != '\0') {
+        return 0;
+    }
+
+    return (strcmp(status, "okay") == 0 || strcmp(status, "ok") == 0);
+}
+
+static int fdt_component_eq(const char *name, const char *comp, uint32 len)
+{
+    uint32 i;
+
+    for (i = 0; i < len; i++) {
+        if (name[i] != comp[i]) {
+            return 0;
+        }
+    }
+
+    if (name[len] == '\0') {
+        return 1;
+    }
+
+    if (name[len] != '@') {
+        return 0;
+    }
+
+    for (i = 0; i < len; i++) {
+        if (comp[i] == '@') {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+static int fdt_walk_path(const struct fdt *fdt, struct fdt_node *node,
+    const char *p, const char *end)
+{
+    struct fdt_node child;
+    const char *q;
+    int ok;
+
+    while (p < end) {
+        while (p < end && *p == '/') {
+            p++;
+        }
+
+        if (p == end) {
+            break;
+        }
+
+        for (q = p; q < end && *q != '/'; q++) {
+            continue;
+        }
+
+        for (ok = fdt_first_subnode(fdt, node, &child); ok;
+            ok = fdt_next_subnode(fdt, node, &child)) {
+            if (fdt_component_eq(child.name, p, (uint32)(q - p))) {
+                break;
+            }
+        }
+
+        if (!ok) {
+            return 0;
+        }
+
+        *node = child;
+        p = q;
+    }
+
+    return 1;
+}
+
+static const char fdt_aliases[] = "aliases";
+
+int fdt_find_path(const struct fdt *fdt, const char *path, uint32 len,
+    struct fdt_node *node)
+{
+    struct fdt_node aliases;
+    const char *end, *q, *target;
+    uint32 tlen;
+
+    end = path + len;
+
+    if (len == 0 || !fdt_first_node(fdt, node)) {
+        return 0;
+    }
+
+    if (len > 0 && path[0] != '/') {
+        for (q = path; q < end && *q != '/'; q++) {
+            continue;
+        }
+
+        aliases = *node;
+
+        if (!fdt_walk_path(fdt, &aliases, fdt_aliases,
+            fdt_aliases + sizeof(fdt_aliases) - 1)) {
+            return 0;
+        }
+
+        target = fdt_getprop_namelen(fdt, &aliases, path, (uint32)(q - path),
+            &tlen);
+
+        if (target == NULL || tlen < 2 || target[0] != '/'
+            || target[tlen - 1] != '\0') {
+            return 0;
+        }
+
+        if (!fdt_walk_path(fdt, node, target, target + tlen - 1)) {
+            return 0;
+        }
+
+        path = q;
+    }
+
+    return fdt_walk_path(fdt, node, path, end);
 }

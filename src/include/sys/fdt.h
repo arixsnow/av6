@@ -18,6 +18,8 @@
  * is not damage and returns NULL.
  */
 
+#define FDT_MAX_CELLS           4
+
 struct fdt {
     const uint32 *struct_start;
     const uint32 *struct_end;
@@ -45,6 +47,20 @@ int fdt_next_subnode(const struct fdt *fdt, const struct fdt_node *parent,
 /* A node name carries a unit address, so the compare stops at the '@'. */
 int fdt_node_is(const struct fdt_node *node, const char *name);
 
+int fdt_node_is_compatible(const struct fdt *fdt, const struct fdt_node *node,
+    const char *compat);
+
+int fdt_parent(const struct fdt *fdt, const struct fdt_node *node,
+    struct fdt_node *parent);
+
+int fdt_node_is_available(const struct fdt *fdt, const struct fdt_node *node);
+
+int fdt_find_path(const struct fdt *fdt, const char *path, uint32 len,
+    struct fdt_node *node);
+
+int fdt_translate_reg(const struct fdt *fdt, const struct fdt_node *node,
+    uint32 index, uint64 *addrp, uint64 *sizep);
+
 const void *fdt_getprop(const struct fdt *fdt, const struct fdt_node *node,
     const char *name, uint32 *lenp);
 int fdt_prop_u32(const struct fdt *fdt, const struct fdt_node *node,
@@ -55,6 +71,6 @@ int fdt_node_by_phandle(const struct fdt *fdt, uint32 phandle,
 /* Everything in the blob is big-endian. */
 uint32 fdt32(uint32 v);
 uint64 fdt64(const uint32 *cells);
-uint64 fdt_cells(const uint32 *cells, int n);
+int fdt_cells(const uint32 *cells, int n, uint64 *out);
 
 #endif  /* _AV6_FDT_H_ */

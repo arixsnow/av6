@@ -21,7 +21,6 @@
 #include "arch/platform.h"
 #include "sys/fdt.h"
 #include "sys/kio.h"
-#include "sys/param.h"
 #include "sys/string.h"
 #include "sys/types.h"
 #include "vm/physmem.h"
@@ -38,10 +37,6 @@ int psci_conduit;
 uint64 timer_freq_dtb;
 struct platform platform;
 uint64 cpu_mpidr[NCPU_MAX];
-
-/* Declared by the root node; every reg below is decoded with them. */
-static int root_acells = 2;
-static int root_scells = 1;
 
 static uint64 boot_mpidr;
 static int nbanks;
@@ -64,19 +59,6 @@ static uint32 dtb_intid(const uint32 *intr)
     }
 
     panic("dtb: interrupt type %u is not SPI or PPI", type);
-}
-
-static void dtb_parse_root(const struct fdt *fdt, const struct fdt_node *node)
-{
-    uint32 v;
-
-    if (fdt_prop_u32(fdt, node, "#address-cells", &v)) {
-        root_acells = (int)v;
-    }
-
-    if (fdt_prop_u32(fdt, node, "#size-cells", &v)) {
-        root_scells = (int)v;
-    }
 }
 
 static void dtb_parse_cpus(const struct fdt *fdt, const struct fdt_node *cpus)
@@ -125,33 +107,38 @@ static void dtb_parse_cpus(const struct fdt *fdt, const struct fdt_node *cpus)
     }
 }
 
+int dtb_is_memory(const struct fdt *fdt, const struct fdt_node *node)
+{
+    const char *type;
+    uint32 len;
+
+    type = fdt_getprop(fdt, node, "device_type", &len);
+
+    return (type != NULL && len > 0 && type[len - 1] == '\0'
+        && strcmp(type, "memory") == 0);
+}
+
 /*
  * reg is (base, size) pairs. Several pairs, or several memory nodes, mean
  * several DRAM banks.
  */
 static void dtb_parse_memory(const struct fdt *fdt, const struct fdt_node *node)
 {
-    const uint32 *reg;
     uint64 base, size;
-    uint32 len, off, ec;
+    uint32 i;
 
-    reg = fdt_getprop(fdt, node, "reg", &len);
-
-    if (reg == NULL) {
-        return;
-    }
-
-    ec = (uint32)(root_acells + root_scells);
-
-    for (off = 0; (off + ec) * 4 <= len; off += ec) {
-        base = fdt_cells(reg + off, root_acells);
-        size = fdt_cells(reg + off + root_acells, root_scells);
-
+    for (i = 0; fdt_translate_reg(fdt, node, i, &base, &size); i++) {
         if (size > 0) {
             physmem_hardware_region(base, size);
             nbanks++;
         }
     }
+}
+
+int dtb_is_psci(const struct fdt *fdt, const struct fdt_node *node)
+{
+    return (fdt_node_is_compatible(fdt, node, "arm,psci-1.0")
+        || fdt_node_is_compatible(fdt, node, "arm,psci-0.2"));
 }
 
 static void dtb_parse_psci(const struct fdt *fdt, const struct fdt_node *node)
@@ -166,6 +153,12 @@ static void dtb_parse_psci(const struct fdt *fdt, const struct fdt_node *node)
     }
 
     psci_conduit = (strcmp(method, "smc") == 0) ? PSCI_CONDUIT_SMC : PSCI_CONDUIT_HVC;
+}
+
+int dtb_is_timer(const struct fdt *fdt, const struct fdt_node *node)
+{
+    return (fdt_node_is_compatible(fdt, node, "arm,armv8-timer")
+        || fdt_node_is_compatible(fdt, node, "arm,armv7-timer"));
 }
 
 static void dtb_parse_timer(const struct fdt *fdt, const struct fdt_node *node)
@@ -186,13 +179,12 @@ static void dtb_parse_timer(const struct fdt *fdt, const struct fdt_node *node)
 
 static void dtb_parse_uart(const struct fdt *fdt, const struct fdt_node *node)
 {
-    const uint32 *reg, *intr;
+    const uint32 *intr;
+    uint64 base;
     uint32 len, v;
 
-    reg = fdt_getprop(fdt, node, "reg", &len);
-
-    if (reg != NULL && len >= 16) {
-        platform.uart_base = fdt64(reg);
+    if (fdt_translate_reg(fdt, node, 0, &base, NULL)) {
+        platform.uart_base = (uintptr)base;
     }
 
     if (fdt_prop_u32(fdt, node, "clock-frequency", &v)) {
@@ -208,23 +200,59 @@ static void dtb_parse_uart(const struct fdt *fdt, const struct fdt_node *node)
     }
 }
 
+int dtb_is_gic(const struct fdt *fdt, const struct fdt_node *node)
+{
+    return fdt_node_is_compatible(fdt, node, "arm,gic-v3");
+}
+
 static void dtb_parse_gic(const struct fdt *fdt, const struct fdt_node *node)
 {
-    const uint32 *reg;
-    uint32 len;
+    uint64 base;
 
-    reg = fdt_getprop(fdt, node, "reg", &len);
-
-    if (reg != NULL && len >= 32) {
-        platform.gicd_base = fdt64(reg);
-        platform.gicr_base = fdt64(reg + 4);
+    if (fdt_translate_reg(fdt, node, 0, &base, NULL)) {
+        platform.gicd_base = (uintptr)base;
     }
+
+    if (fdt_translate_reg(fdt, node, 1, &base, NULL)) {
+        platform.gicr_base = (uintptr)base;
+    }
+}
+
+int dtb_is_console(const struct fdt *fdt, const struct fdt_node *node)
+{
+    return fdt_node_is_available(fdt, node)
+        && fdt_node_is_compatible(fdt, node, "arm,pl011");
+}
+
+/* serial0 stands in only when stdout-path names nothing */
+static int dtb_console(const struct fdt *fdt, struct fdt_node *node)
+{
+    struct fdt_node chosen;
+    const char *path = NULL;
+    uint32 len, n;
+
+    if (fdt_find_path(fdt, "/chosen", (uint32)strlen("/chosen"), &chosen)) {
+        path = fdt_getprop(fdt, &chosen, "stdout-path", &len);
+    }
+
+    if (path != NULL && len > 0 && path[len - 1] == '\0') {
+        for (n = 0; n < len - 1 && path[n] != ':'; n++) {
+            continue;
+        }
+
+        if (fdt_find_path(fdt, path, n, node)) {
+            return dtb_is_console(fdt, node);
+        }
+    }
+
+    return fdt_find_path(fdt, "serial0", (uint32)strlen("serial0"), node)
+        && dtb_is_console(fdt, node);
 }
 
 void dtb_init(void *dtb)
 {
     struct fdt fdt;
-    struct fdt_node node, clk;
+    struct fdt_node node, clk, console;
     int ok;
 
     fdt_open(&fdt, dtb);
@@ -236,24 +264,26 @@ void dtb_init(void *dtb)
     for (ok = fdt_first_node(&fdt, &node); ok;
         ok = fdt_next_node(&fdt, &node)) {
 
-        if (node.depth == 0) {
-            dtb_parse_root(&fdt, &node);
-        } else if (node.depth != 1) {
-            continue;
-        } else if (fdt_node_is(&node, "cpus")) {
+        if (node.depth == 1 && fdt_node_is(&node, "cpus")) {
             dtb_parse_cpus(&fdt, &node);
-        } else if (fdt_node_is(&node, "memory")) {
+        } else if (!fdt_node_is_available(&fdt, &node)) {
+            continue;
+        } else if (node.depth == 1 && dtb_is_memory(&fdt, &node)) {
             dtb_parse_memory(&fdt, &node);
-        } else if (fdt_node_is(&node, "psci")) {
+        } else if (dtb_is_psci(&fdt, &node)) {
             dtb_parse_psci(&fdt, &node);
-        } else if (fdt_node_is(&node, "timer")) {
+        } else if (dtb_is_timer(&fdt, &node)) {
             dtb_parse_timer(&fdt, &node);
-        } else if (fdt_node_is(&node, "pl011")) {
-            dtb_parse_uart(&fdt, &node);
-        } else if (fdt_node_is(&node, "intc")) {
+        } else if (dtb_is_gic(&fdt, &node)) {
             dtb_parse_gic(&fdt, &node);
         }
     }
+
+    if (!dtb_console(&fdt, &console)) {
+        panic("dtb: no usable PL011 named by stdout-path or the serial0 alias");
+    }
+
+    dtb_parse_uart(&fdt, &console);
 
     if (platform.uart_clk == 0 && uart_clk_phandle != 0
         && fdt_node_by_phandle(&fdt, uart_clk_phandle, &clk)) {
