@@ -90,7 +90,10 @@ void intr_register(uint32 irq, const char *name, int (*filter)(void),
     int pid;
     struct intr_src *src;
 
-    KASSERT(irq < intr_nirq, "intr_register: irq %d out of range (%u)", irq, intr_nirq);
+    if (irq >= intr_nirq) {
+        panic("intr_register: irq %u out of range (%u)", irq, intr_nirq);
+    }
+
     KASSERT(intr_srcs[irq] == NULL, "intr_register: irq %d already registered", irq);
 
     src = kmalloc(sizeof(*src));
