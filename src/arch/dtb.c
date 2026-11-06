@@ -44,21 +44,27 @@ static int boot_found;
 static int cpu_overflow;
 static uint32 uart_clk_phandle;
 
-static uint32 dtb_intid(const uint32 *intr)
+/* A non-zero fourth cell names a PPI partition, which AV6 does not support. */
+uint32 dtb_intid(const struct fdt *fdt, const struct fdt_irq *irq)
 {
-    uint32 type;
+    uint32 n;
 
-    type = fdt32(intr[0]);
-
-    if (type == DT_INTR_SPI) {
-        return GIC_SPI_BASE + fdt32(intr[1]);
+    if (!dtb_is_gic(fdt, &irq->ctrl)
+        || (irq->ncells != 3 && (irq->ncells != 4 || irq->cells[3] != 0))) {
+        return 0;
     }
 
-    if (type == DT_INTR_PPI) {
-        return GIC_PPI_BASE + fdt32(intr[1]);
+    n = irq->cells[1];
+
+    if (irq->cells[0] == DT_INTR_SPI && n < GIC_SPI_END - GIC_SPI_BASE) {
+        return GIC_SPI_BASE + n;
     }
 
-    panic("dtb: interrupt type %u is not SPI or PPI", type);
+    if (irq->cells[0] == DT_INTR_PPI && n < GIC_SPI_BASE - GIC_PPI_BASE) {
+        return GIC_PPI_BASE + n;
+    }
+
+    return 0;
 }
 
 static void dtb_parse_cpus(const struct fdt *fdt, const struct fdt_node *cpus)
@@ -163,25 +169,23 @@ int dtb_is_timer(const struct fdt *fdt, const struct fdt_node *node)
 
 static void dtb_parse_timer(const struct fdt *fdt, const struct fdt_node *node)
 {
-    const uint32 *intr;
-    uint32 v, len;
+    struct fdt_irq irq;
+    uint32 v;
 
     if (fdt_prop_u32(fdt, node, "clock-frequency", &v)) {
         timer_freq_dtb = v;
     }
 
-    intr = fdt_getprop(fdt, node, "interrupts", &len);
-
-    if (intr != NULL && len >= (DT_TIMER_PHYS_NS + 1) * 12) {
-        platform.timer_irq = dtb_intid(intr + DT_TIMER_PHYS_NS * 3);
+    if (fdt_irq(fdt, node, DT_TIMER_PHYS_NS, &irq)) {
+        platform.timer_irq = dtb_intid(fdt, &irq);
     }
 }
 
 static void dtb_parse_uart(const struct fdt *fdt, const struct fdt_node *node)
 {
-    const uint32 *intr;
+    struct fdt_irq irq;
     uint64 base;
-    uint32 len, v;
+    uint32 v;
 
     if (fdt_translate_reg(fdt, node, 0, &base, NULL)) {
         platform.uart_base = (uintptr)base;
@@ -193,10 +197,8 @@ static void dtb_parse_uart(const struct fdt *fdt, const struct fdt_node *node)
         uart_clk_phandle = v;
     }
 
-    intr = fdt_getprop(fdt, node, "interrupts", &len);
-
-    if (intr != NULL && len >= 12) {
-        platform.uart_irq = dtb_intid(intr);
+    if (fdt_irq(fdt, node, 0, &irq)) {
+        platform.uart_irq = dtb_intid(fdt, &irq);
     }
 }
 

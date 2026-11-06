@@ -19,6 +19,7 @@
  */
 
 #define FDT_MAX_CELLS           4
+#define FDT_MAX_IRQ_ARGS        16
 
 struct fdt {
     const uint32 *struct_start;
@@ -32,6 +33,13 @@ struct fdt_node {
     const uint32 *props;
     const char *name;
     int depth;
+};
+
+/* cells are in host order, unlike raw property data. */
+struct fdt_irq {
+    struct fdt_node ctrl;
+    uint32 ncells;
+    uint32 cells[FDT_MAX_IRQ_ARGS];
 };
 
 void fdt_open(struct fdt *fdt, const void *blob);
@@ -60,6 +68,9 @@ int fdt_find_path(const struct fdt *fdt, const char *path, uint32 len,
 
 int fdt_translate_reg(const struct fdt *fdt, const struct fdt_node *node,
     uint32 index, uint64 *addrp, uint64 *sizep);
+
+int fdt_irq(const struct fdt *fdt, const struct fdt_node *node, uint32 index,
+    struct fdt_irq *irq);
 
 const void *fdt_getprop(const struct fdt *fdt, const struct fdt_node *node,
     const char *name, uint32 *lenp);

@@ -27,6 +27,7 @@
 /* An interrupt specifier numbers within its type, not across all INTIDs. */
 #define GIC_PPI_BASE    16
 #define GIC_SPI_BASE    32
+#define GIC_SPI_END     1020
 
 /* Returned by gic_acknwlg() when no real IRQ is pending */
 #define GIC_SPURIOUS    1023

@@ -44,7 +44,6 @@
 #define GICD_CTLR_RWP           (1U << 31)
 
 #define GICD_TYPER_ITLINES_MASK     0x1fU
-#define GICD_SPI_MAX                1020        /* arch ceiling on SPI count */
 
 /* One second or a spin count if CNTFRQ_EL0 reads 0 */
 #define GIC_RWP_SPINS               100000000UL
@@ -169,7 +168,7 @@ static uint32 gic_typer_nirq(void)
     uint32 lines = gicd_read32(GICD_TYPER) & GICD_TYPER_ITLINES_MASK;
     uint32 n = 32 * (lines + 1);
 
-    return (n > GICD_SPI_MAX) ? GICD_SPI_MAX : n;
+    return (n > GIC_SPI_END) ? GIC_SPI_END : n;
 }
 
 static void gic_wait_rwp(void)

@@ -18,8 +18,8 @@
 #define FDT_END             9
 
 #define SW_HDR_WORDS        14
-#define SW_WORDS            512
-#define SW_STRINGS          128
+#define SW_WORDS            1024
+#define SW_STRINGS          256
 
 static uint32 sw_buf[SW_WORDS];
 static char sw_str[SW_STRINGS];
@@ -107,6 +107,7 @@ static void sw_prop_cells(const char *name, const uint32 *v, uint32 n)
 #define SW_STR(name, lit)       sw_prop((name), (lit), sizeof(lit))
 #define SW_CELLS(name, ...)     sw_prop_cells((name), (const uint32[]){ __VA_ARGS__ },  \
     sizeof((const uint32[]){ __VA_ARGS__ }) / 4)
+#define SW_EMPTY(name)          sw_prop((name), "", 0)
 
 static const void *sw_finish(void)
 {
@@ -145,6 +146,7 @@ static const void *fdt_fixture(void)
     sw_begin("");
         SW_CELLS("#address-cells", 2);
         SW_CELLS("#size-cells", 2);
+        SW_CELLS("interrupt-parent", 1);
         sw_begin("chosen");
             SW_STR("stdout-path", "serial0:115200n8");
         sw_end();
@@ -164,17 +166,29 @@ static const void *fdt_fixture(void)
         sw_end();
         sw_begin("timer");
             SW_STR("compatible", "arm,armv8-timer");
+            SW_CELLS("interrupts", 1, 13, 8, 1, 14, 8, 1, 11, 8, 1, 10, 8);
         sw_end();
         sw_begin("timer-v7");
             SW_STR("compatible", "arm,armv7-timer");
         sw_end();
         sw_begin("interrupt-controller@2f000000");
             SW_STR("compatible", "arm,gic-v3");
+            SW_CELLS("#interrupt-cells", 3);
+            SW_CELLS("#address-cells", 2);
+            SW_CELLS("#size-cells", 2);
+            SW_EMPTY("interrupt-controller");
             SW_CELLS("reg", 0, 0x2f000000, 0, 0x10000, 0, 0x2f100000, 0, 0x200000);
+            SW_CELLS("phandle", 1);
+        sw_end();
+        sw_begin("intc-off");
+            SW_CELLS("#interrupt-cells", 3);
+            SW_EMPTY("interrupt-controller");
+            SW_STR("status", "disabled");
+            SW_CELLS("phandle", 2);
         sw_end();
         sw_begin("memory@80000000");
             SW_STR("device_type", "memory");
-            SW_CELLS("reg", 0, 0x80000000, 0, 0x80000000,
+            SW_CELLS("reg", 0, 0x80000000, 0, 0x7c000000,
                 8, 0x80000000, 0, 0x80000000);
         sw_end();
         sw_begin("bus@8000000");
@@ -182,6 +196,12 @@ static const void *fdt_fixture(void)
             SW_CELLS("#address-cells", 2);
             SW_CELLS("#size-cells", 1);
             SW_CELLS("ranges", 0, 0x8000000, 0, 0x8000000, 0x18000000);
+            SW_CELLS("#interrupt-cells", 1);
+            SW_CELLS("interrupt-map-mask", 0, 0, 63);
+            SW_CELLS("interrupt-map",
+                0, 0, 5, 1, 0, 0, 0, 5, 4,
+                0, 0, 7, 2, 0, 7, 4,
+                0, 0, 15, 1, 0, 0, 0, 15, 4);
             sw_begin("motherboard-bus@8000000");
                 SW_CELLS("#address-cells", 2);
                 SW_CELLS("#size-cells", 1);
@@ -203,11 +223,25 @@ static const void *fdt_fixture(void)
                     sw_begin("serial@90000");
                         SW_STR("compatible", "arm,pl011\0arm,primecell");
                         SW_CELLS("reg", 0x90000, 0x1000);
+                        SW_CELLS("interrupts", 5);
                     sw_end();
                     sw_begin("serial@a0000");
                         SW_STR("compatible", "arm,pl011\0arm,primecell");
                         SW_CELLS("reg", 0xa0000, 0x1000);
                         SW_STR("status", "disabled");
+                    sw_end();
+                    sw_begin("nomap@b0000");
+                        SW_CELLS("reg", 0xb0000, 0x1000);
+                        SW_CELLS("interrupts", 9);
+                    sw_end();
+                    sw_begin("offmap@c0000");
+                        SW_CELLS("reg", 0xc0000, 0x1000);
+                        SW_CELLS("interrupts", 7);
+                    sw_end();
+                    sw_begin("ext@d0000");
+                        SW_CELLS("reg", 0xd0000, 0x1000);
+                        SW_CELLS("interrupts", 5);
+                        SW_CELLS("interrupts-extended", 1, 0, 7, 4);
                     sw_end();
                 sw_end();
                 sw_begin("sram@700000000");
@@ -228,6 +262,33 @@ static const void *fdt_fixture(void)
             sw_begin("dev@0");
                 SW_CELLS("reg", 0, 0, 0, 0, 0, 0x1000);
             sw_end();
+        sw_end();
+        sw_begin("loop-a");
+            SW_CELLS("#interrupt-cells", 1);
+            SW_CELLS("#address-cells", 0);
+            SW_CELLS("interrupt-map", 1, 4, 1);
+            SW_CELLS("phandle", 3);
+        sw_end();
+        sw_begin("loop-b");
+            SW_CELLS("#interrupt-cells", 1);
+            SW_CELLS("#address-cells", 0);
+            SW_CELLS("interrupt-map", 1, 3, 1);
+            SW_CELLS("phandle", 4);
+        sw_end();
+        sw_begin("looped");
+            SW_CELLS("interrupt-parent", 3);
+            SW_CELLS("interrupts", 1);
+        sw_end();
+        sw_begin("badmask");
+            SW_CELLS("#interrupt-cells", 1);
+            SW_CELLS("#address-cells", 0);
+            SW_CELLS("interrupt-map-mask", 0, 63);
+            SW_CELLS("interrupt-map", 5, 1, 0, 0, 0, 5, 4);
+            SW_CELLS("phandle", 5);
+        sw_end();
+        sw_begin("masked");
+            SW_CELLS("interrupt-parent", 5);
+            SW_CELLS("interrupts", 5);
         sw_end();
     sw_end();
 
@@ -325,7 +386,7 @@ static void fdt_translate_picks_the_window(struct ktest *t)
         && addr == 0x2f100000UL);
 
     KTEST_EXPECT(t, fdt_fixture_reg(mem, 0, &addr, &size)
-        && addr == 0x80000000UL && size == 0x80000000UL);
+        && addr == 0x80000000UL && size == 0x7c000000UL);
     KTEST_EXPECT(t, fdt_fixture_reg(mem, 1, &addr, &size)
         && addr == 0x880000000UL && size == 0x80000000UL);
 }
@@ -432,3 +493,93 @@ static void dtb_matches_on_compatible(struct ktest *t)
     KTEST_EXPECT(t, !dtb_is_memory(&fdt, &node));
 }
 KTEST_CASE(dtb_matches_on_compatible);
+
+static int fdt_fixture_irq(struct fdt *fdt, const char *path, uint32 index,
+    struct fdt_irq *irq)
+{
+    struct fdt_node node;
+
+    return (fdt_fixture_path(fdt, &node, path)
+        && fdt_irq(fdt, &node, index, irq));
+}
+
+static void fdt_irq_walks_the_interrupt_tree(struct ktest *t)
+{
+    static const char ext[] = "/bus/motherboard-bus/iofpga-bus/ext";
+    struct fdt fdt;
+    struct fdt_irq irq;
+
+    KTEST_ASSERT(t, fdt_fixture_irq(&fdt, fdt_console, 0, &irq));
+    KTEST_EXPECT(t, fdt_node_is(&irq.ctrl, "interrupt-controller"));
+    KTEST_EXPECT(t, irq.ncells == 3 && irq.cells[0] == 0
+        && irq.cells[1] == 5 && irq.cells[2] == 4);
+    KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 37U);
+    KTEST_EXPECT(t, !fdt_fixture_irq(&fdt, fdt_console, 1, &irq));
+
+    KTEST_EXPECT(t, fdt_fixture_irq(&fdt, "/timer", 1, &irq)
+        && dtb_intid(&fdt, &irq) == 30U);
+    KTEST_EXPECT(t, fdt_fixture_irq(&fdt, "/timer", 3, &irq)
+        && dtb_intid(&fdt, &irq) == 26U);
+    KTEST_EXPECT(t, !fdt_fixture_irq(&fdt, "/timer", 4, &irq));
+
+    KTEST_EXPECT(t, fdt_fixture_irq(&fdt, ext, 0, &irq)
+        && dtb_intid(&fdt, &irq) == 39U);
+}
+KTEST_CASE(fdt_irq_walks_the_interrupt_tree);
+
+static void fdt_irq_fails_without_a_usable_route(struct ktest *t)
+{
+    struct fdt fdt;
+    struct fdt_irq irq;
+
+    KTEST_EXPECT(t, !fdt_fixture_irq(&fdt,
+        "/bus/motherboard-bus/iofpga-bus/nomap", 0, &irq));
+    KTEST_EXPECT(t, !fdt_fixture_irq(&fdt,
+        "/bus/motherboard-bus/iofpga-bus/offmap", 0, &irq));
+    KTEST_EXPECT(t, !fdt_fixture_irq(&fdt, "/looped", 0, &irq));
+    KTEST_EXPECT(t, !fdt_fixture_irq(&fdt, "/masked", 0, &irq));
+}
+KTEST_CASE(fdt_irq_fails_without_a_usable_route);
+
+static void dtb_intid_accepts_only_gic_spi_and_ppi(struct ktest *t)
+{
+    struct fdt fdt;
+    struct fdt_irq irq;
+
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &irq.ctrl, "/interrupt-controller"));
+
+    irq.ncells = 3;
+    irq.cells[2] = 4;
+
+    irq.cells[0] = 0;
+    irq.cells[1] = 987;
+    KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 1019U);
+    irq.cells[1] = 988;
+    KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 0U);
+
+    irq.cells[0] = 1;
+    irq.cells[1] = 15;
+    KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 31U);
+    irq.cells[1] = 16;
+    KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 0U);
+
+    irq.cells[0] = 2;
+    irq.cells[1] = 0;
+    KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 0U);
+
+    irq.cells[0] = 0;
+    irq.cells[1] = 5;
+    irq.ncells = 4;
+    irq.cells[3] = 0;
+    KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 37U);
+    irq.cells[3] = 1;
+    KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 0U);
+
+    irq.ncells = 2;
+    KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 0U);
+
+    irq.ncells = 3;
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &irq.ctrl, "/intc-off"));
+    KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 0U);
+}
+KTEST_CASE(dtb_intid_accepts_only_gic_spi_and_ppi);

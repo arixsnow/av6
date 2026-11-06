@@ -655,3 +655,261 @@ int fdt_find_path(const struct fdt *fdt, const char *path, uint32 len,
 
     return fdt_walk_path(fdt, node, path, end);
 }
+
+/* A node takes at least three words: BEGIN_NODE, its name, END_NODE. */
+static uint32 fdt_max_nodes(const struct fdt *fdt)
+{
+    return (uint32)(fdt->struct_end - fdt->struct_start) / 3;
+}
+
+static int fdt_irq_parent(const struct fdt *fdt, const struct fdt_node *node,
+    struct fdt_node *parent)
+{
+    struct fdt_node cur, next;
+    uint32 hop, max, ph, v;
+
+    cur = *node;
+    max = fdt_max_nodes(fdt);
+
+    for (hop = 0; hop < max; hop++) {
+        if (fdt_prop_u32(fdt, &cur, "interrupt-parent", &ph)) {
+            if (!fdt_node_by_phandle(fdt, ph, &next)) {
+                return 0;
+            }
+        } else if (!fdt_parent(fdt, &cur, &next)) {
+            return 0;
+        }
+
+        if (fdt_prop_u32(fdt, &next, "#interrupt-cells", &v)) {
+            *parent = next;
+            return 1;
+        }
+
+        cur = next;
+    }
+
+    return 0;
+}
+
+static int fdt_irq_spec(const struct fdt *fdt, const struct fdt_node *node,
+    uint32 index, struct fdt_node *parent, struct fdt_irq *irq)
+{
+    const uint32 *p;
+    uint32 len, off, n, i;
+
+    p = fdt_getprop(fdt, node, "interrupts-extended", &len);
+
+    if (p != NULL) {
+        len >>= 2;
+
+        for (off = 0, i = 0; off < len; off += 1 + n, i++) {
+            if (!fdt_node_by_phandle(fdt, fdt32(p[off]), parent)
+                || !fdt_prop_u32(fdt, parent, "#interrupt-cells", &n)
+                || n < 1 || n > FDT_MAX_IRQ_ARGS || n > len - off - 1) {
+                return 0;
+            }
+
+            if (i == index) {
+                break;
+            }
+        }
+
+        if (off >= len) {
+            return 0;
+        }
+
+        p += off + 1;
+    } else {
+        p = fdt_getprop(fdt, node, "interrupts", &len);
+
+        if (p == NULL || !fdt_irq_parent(fdt, node, parent)
+            || !fdt_prop_u32(fdt, parent, "#interrupt-cells", &n)
+            || n < 1 || n > FDT_MAX_IRQ_ARGS
+            || ((uint64)index + 1) * n * 4 > len) {
+            return 0;
+        }
+
+        p += index * n;
+    }
+
+    irq->ncells = n;
+
+    for (i = 0; i < n; i++) {
+        irq->cells[i] = fdt32(p[i]);
+    }
+
+    return 1;
+}
+
+static uint32 fdt_irq_unit(const struct fdt *fdt, const struct fdt_node *node,
+    uint32 *addr)
+{
+    struct fdt_node bus;
+    const uint32 *reg;
+    uint32 len, na, i;
+
+    reg = fdt_getprop(fdt, node, "reg", &len);
+
+    if (reg == NULL || !fdt_parent(fdt, node, &bus)
+        || !fdt_prop_u32(fdt, &bus, "#address-cells", &na)
+        || na > FDT_MAX_CELLS || na * 4 > len) {
+        return 0;
+    }
+
+    for (i = 0; i < na; i++) {
+        addr[i] = fdt32(reg[i]);
+    }
+
+    return na;
+}
+
+/* 0: no usable entry. 1: the walk moves to *parent. 2: the nexus maps to itself. */
+static int fdt_irq_map(const struct fdt *fdt, const struct fdt_node *nexus,
+    uint32 *addr, uint32 *naddr, struct fdt_irq *irq, struct fdt_node *parent)
+{
+    const uint32 *map, *mask;
+    struct fdt_node pnode;
+    uint32 key[FDT_MAX_IRQ_ARGS];
+    uint32 len, mlen, na, ni, pa, pi, ph, seen, off, one, m, i;
+
+    map = fdt_getprop(fdt, nexus, "interrupt-map", &len);
+    mask = fdt_getprop(fdt, nexus, "interrupt-map-mask", &mlen);
+
+    if (!fdt_prop_u32(fdt, nexus, "#address-cells", &na)) {
+        na = 2;
+    }
+
+    ni = irq->ncells;
+
+    if (map == NULL || na > FDT_MAX_CELLS || na + ni > FDT_MAX_IRQ_ARGS
+        || (mask != NULL && mlen != (na + ni) * 4)) {
+        return 0;
+    }
+
+    for (i = 0; i < na + ni; i++) {
+        m = (mask != NULL) ? fdt32(mask[i]) : ~0U;
+
+        if (i < na && i >= *naddr && m != 0) {
+            return 0;
+        }
+
+        if (i < na) {
+            key[i] = (i < *naddr) ? addr[i] & m : 0;
+        } else {
+            key[i] = irq->cells[i - na] & m;
+        }
+    }
+
+    len >>= 2;
+    seen = 0;
+    pa = pi = 0;
+
+    for (off = 0; off + na + ni < len; off += one) {
+        ph = fdt32(map[off + na + ni]);
+
+        if (ph == 0 || ph == ~0U) {
+            return 0;
+        }
+
+        if (ph != seen) {
+            if (!fdt_node_by_phandle(fdt, ph, &pnode)
+                || !fdt_prop_u32(fdt, &pnode, "#interrupt-cells", &pi)) {
+                return 0;
+            }
+
+            if (!fdt_prop_u32(fdt, &pnode, "#address-cells", &pa)) {
+                pa = 0;
+            }
+
+            if (pi < 1 || pa > FDT_MAX_CELLS || pa + pi > FDT_MAX_IRQ_ARGS) {
+                return 0;
+            }
+
+            seen = ph;
+        }
+
+        one = na + ni + 1 + pa + pi;
+
+        if (one > len - off) {
+            return 0;
+        }
+
+        for (i = 0; i < na + ni; i++) {
+            m = (mask != NULL) ? fdt32(mask[i]) : ~0U;
+
+            if ((fdt32(map[off + i]) & m) != key[i]) {
+                break;
+            }
+        }
+
+        if (i == na + ni && fdt_node_is_available(fdt, &pnode)) {
+            for (i = 0; i < pa; i++) {
+                addr[i] = fdt32(map[off + na + ni + 1 + i]);
+            }
+
+            for (i = 0; i < pi; i++) {
+                irq->cells[i] = fdt32(map[off + na + ni + 1 + pa + i]);
+            }
+
+            *naddr = pa;
+            irq->ncells = pi;
+            *parent = pnode;
+
+            return (pnode.props == nexus->props) ? 2 : 1;
+        }
+    }
+
+    return 0;
+}
+
+static int fdt_irq_walk(const struct fdt *fdt, struct fdt_node cur,
+    uint32 *addr, uint32 naddr, struct fdt_irq *irq)
+{
+    struct fdt_node next;
+    uint32 hop, max, len, v;
+    int r;
+
+    max = fdt_max_nodes(fdt);
+
+    for (hop = 0; hop < max; hop++) {
+        if (fdt_getprop(fdt, &cur, "interrupt-map", &len) != NULL) {
+            r = fdt_irq_map(fdt, &cur, addr, &naddr, irq, &next);
+
+            if (r == 0) {
+                return 0;
+            }
+
+            if (r == 2) {
+                irq->ctrl = next;
+                return 1;
+            }
+        } else if (fdt_getprop(fdt, &cur, "interrupt-controller", &len) != NULL) {
+            irq->ctrl = cur;
+            return 1;
+        } else if (!fdt_irq_parent(fdt, &cur, &next)
+            || !fdt_prop_u32(fdt, &next, "#interrupt-cells", &v)
+            || v != irq->ncells) {
+            return 0;
+        }
+
+        cur = next;
+    }
+
+    return 0;
+}
+
+int fdt_irq(const struct fdt *fdt, const struct fdt_node *node, uint32 index,
+    struct fdt_irq *irq)
+{
+    struct fdt_node parent;
+    uint32 addr[FDT_MAX_CELLS];
+    uint32 naddr;
+
+    if (!fdt_irq_spec(fdt, node, index, &parent, irq)) {
+        return 0;
+    }
+
+    naddr = fdt_irq_unit(fdt, node, addr);
+
+    return fdt_irq_walk(fdt, parent, addr, naddr, irq);
+}

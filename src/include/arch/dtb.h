@@ -34,5 +34,6 @@ int dtb_is_psci(const struct fdt *fdt, const struct fdt_node *node);
 int dtb_is_timer(const struct fdt *fdt, const struct fdt_node *node);
 int dtb_is_gic(const struct fdt *fdt, const struct fdt_node *node);
 int dtb_is_console(const struct fdt *fdt, const struct fdt_node *node);
+uint32 dtb_intid(const struct fdt *fdt, const struct fdt_irq *irq);
 
 #endif  /* _AV6_DTB_H_ */
