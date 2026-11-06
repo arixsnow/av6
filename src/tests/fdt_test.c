@@ -160,9 +160,29 @@ static const void *fdt_fixture(void)
         sw_end();
         sw_begin("psci-v1");
             SW_STR("compatible", "arm,psci-1.0");
+            SW_STR("method", "hvc");
         sw_end();
         sw_begin("psci-v0");
             SW_STR("compatible", "arm,psci");
+            SW_STR("method", "svc");
+        sw_end();
+        sw_begin("cpus");
+            SW_CELLS("#address-cells", 1);
+            SW_CELLS("#size-cells", 0);
+            sw_begin("cpu@0");
+                SW_STR("device_type", "cpu");
+                SW_CELLS("reg", 0);
+                SW_STR("enable-method", "psci");
+            sw_end();
+            sw_begin("cpu@1");
+                SW_STR("device_type", "cpu");
+                SW_CELLS("reg", 1);
+                SW_STR("enable-method", "spin-table");
+            sw_end();
+            sw_begin("cpu@2");
+                SW_STR("device_type", "cpu");
+                SW_CELLS("reg", 2);
+            sw_end();
         sw_end();
         sw_begin("timer");
             SW_STR("compatible", "arm,armv8-timer");
@@ -583,3 +603,26 @@ static void dtb_intid_accepts_only_gic_spi_and_ppi(struct ktest *t)
     KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 0U);
 }
 KTEST_CASE(dtb_intid_accepts_only_gic_spi_and_ppi);
+
+static void dtb_psci_is_described_or_absent(struct ktest *t)
+{
+    struct fdt fdt;
+    struct fdt_node node;
+
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/psci"));
+    KTEST_EXPECT_EQ(t, dtb_psci_conduit(&fdt, &node), PSCI_CONDUIT_SMC);
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/psci-v1"));
+    KTEST_EXPECT_EQ(t, dtb_psci_conduit(&fdt, &node), PSCI_CONDUIT_HVC);
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/psci-v0"));
+    KTEST_EXPECT_EQ(t, dtb_psci_conduit(&fdt, &node), PSCI_CONDUIT_NONE);
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/timer"));
+    KTEST_EXPECT_EQ(t, dtb_psci_conduit(&fdt, &node), PSCI_CONDUIT_NONE);
+
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/cpus/cpu@0"));
+    KTEST_EXPECT(t, dtb_cpu_uses_psci(&fdt, &node));
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/cpus/cpu@1"));
+    KTEST_EXPECT(t, !dtb_cpu_uses_psci(&fdt, &node));
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/cpus/cpu@2"));
+    KTEST_EXPECT(t, !dtb_cpu_uses_psci(&fdt, &node));
+}
+KTEST_CASE(dtb_psci_is_described_or_absent);

@@ -34,6 +34,7 @@
 /* Runtime hardware parameters */
 int ncpus;
 int psci_conduit;
+struct cpumask psci_cpus;
 uint64 timer_freq_dtb;
 struct platform platform;
 uint64 cpu_mpidr[NCPU_MAX];
@@ -106,6 +107,10 @@ static void dtb_parse_cpus(const struct fdt *fdt, const struct fdt_node *cpus)
         }
 
         if (ncpus < NCPU_MAX) {
+            if (dtb_cpu_uses_psci(fdt, &cpu)) {
+                cpumask_set(&psci_cpus, ncpus);
+            }
+
             cpu_mpidr[ncpus++] = mpidr;
         } else {
             cpu_overflow = 1;
@@ -147,18 +152,46 @@ int dtb_is_psci(const struct fdt *fdt, const struct fdt_node *node)
         || fdt_node_is_compatible(fdt, node, "arm,psci-0.2"));
 }
 
-static void dtb_parse_psci(const struct fdt *fdt, const struct fdt_node *node)
+int dtb_psci_conduit(const struct fdt *fdt, const struct fdt_node *node)
 {
     const char *method;
     uint32 len;
 
     method = fdt_getprop(fdt, node, "method", &len);
 
-    if ((method == NULL) || (len == 0) || (method[len - 1] != '\0')) {
-        return;
+    if (method == NULL || len == 0 || method[len - 1] != '\0') {
+        return PSCI_CONDUIT_NONE;
     }
 
-    psci_conduit = (strcmp(method, "smc") == 0) ? PSCI_CONDUIT_SMC : PSCI_CONDUIT_HVC;
+    if (strcmp(method, "hvc") == 0) {
+        return PSCI_CONDUIT_HVC;
+    }
+
+    if (strcmp(method, "smc") == 0) {
+        return PSCI_CONDUIT_SMC;
+    }
+
+    return PSCI_CONDUIT_NONE;
+}
+
+static void dtb_parse_psci(const struct fdt *fdt, const struct fdt_node *node)
+{
+    psci_conduit = dtb_psci_conduit(fdt, node);
+
+    if (psci_conduit == PSCI_CONDUIT_NONE) {
+        pr_warn("dtb: PSCI method is neither hvc nor smc\n");
+    }
+}
+
+int dtb_cpu_uses_psci(const struct fdt *fdt, const struct fdt_node *cpu)
+{
+    const char *method;
+    uint32 len;
+
+    method = fdt_getprop(fdt, cpu, "enable-method", &len);
+
+    return (method != NULL && len > 0 && method[len - 1] == '\0'
+        && strcmp(method, "psci") == 0);
 }
 
 int dtb_is_timer(const struct fdt *fdt, const struct fdt_node *node)
@@ -317,7 +350,8 @@ void dtb_init(void *dtb)
     physmem_print();
 
     printk("dtb: PSCI conduit = %s\n",
-        psci_conduit == PSCI_CONDUIT_SMC ? "smc" : "hvc");
+        psci_conduit == PSCI_CONDUIT_SMC ? "smc"
+        : psci_conduit == PSCI_CONDUIT_HVC ? "hvc" : "none");
 
     printk("platform: uart=%p irq=%u clk=%u Hz\n",
         (void *)platform.uart_base, platform.uart_irq, platform.uart_clk);

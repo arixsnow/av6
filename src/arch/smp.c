@@ -26,6 +26,8 @@
 /* PSCI function IDs (SMC Calling Convention, 64-bit) */
 #define PSCI_CPU_ON         0xC4000003UL
 
+#define PSCI_RET_NOT_SUPPORTED      (-1)
+
 #define SMP_ONLINE_SECS     5
 #define SMP_ONLINE_SPINS    500000000UL
 
@@ -37,10 +39,6 @@ extern void mpentry(void);
 /* Called from entry.s */
 void mpboot(void);
 
-/*
- * Issue a PSCI call via HVC.
- * x0 = function ID, x1-x3 = arguments, return value in x0.
- */
 static int64 psci_call(uint64 fn, uint64 arg0, uint64 arg1, uint64 arg2)
 {
     register uint64 x0 asm("x0") = fn;
@@ -50,8 +48,10 @@ static int64 psci_call(uint64 fn, uint64 arg0, uint64 arg1, uint64 arg2)
 
     if (psci_conduit == PSCI_CONDUIT_SMC) {
         asm volatile("smc #0" : "+r"(x0) : "r"(x1), "r"(x2), "r"(x3) : "memory");
-    } else {
+    } else if (psci_conduit == PSCI_CONDUIT_HVC) {
         asm volatile("hvc #0" : "+r"(x0) : "r"(x1), "r"(x2), "r"(x3) : "memory");
+    } else {
+        return PSCI_RET_NOT_SUPPORTED;
     }
 
     return (int64)x0;
@@ -69,11 +69,19 @@ void smp_init(void)
 
     online = 1;
 
-    if (ncpus > 1) {
+    if (ncpus > 1 && psci_conduit == PSCI_CONDUIT_NONE) {
+        pr_warn("smp: no PSCI conduit, %d secondary CPUs not started\n",
+            ncpus - 1);
+    } else if (ncpus > 1) {
         printk("smp: bringing up %d secondary CPUs\n", ncpus - 1);
     }
 
-    for (i = 1; i < ncpus; i++) {
+    for (i = 1; i < ncpus && psci_conduit != PSCI_CONDUIT_NONE; i++) {
+        if (!cpumask_test(&psci_cpus, i)) {
+            pr_warn("smp: CPU %d enable-method is not psci, not started\n", i);
+            continue;
+        }
+
         /*
          * PSCI CPU_ON:
          *      arg0 = target MPIDR (which core to wake)
