@@ -43,5 +43,7 @@ int dtb_is_console(const struct fdt *fdt, const struct fdt_node *node);
 uint32 dtb_intid(const struct fdt *fdt, const struct fdt_irq *irq);
 int dtb_psci_conduit(const struct fdt *fdt, const struct fdt_node *node);
 int dtb_cpu_uses_psci(const struct fdt *fdt, const struct fdt_node *cpu);
+int dtb_cpu_mpidr(const struct fdt *fdt, const struct fdt_node *cpu, uint32 ac,
+    uint64 *mpidr);
 
 #endif  /* _AV6_DTB_H_ */

@@ -68,13 +68,29 @@ uint32 dtb_intid(const struct fdt *fdt, const struct fdt_irq *irq)
     return 0;
 }
 
+int dtb_cpu_mpidr(const struct fdt *fdt, const struct fdt_node *cpu, uint32 ac,
+    uint64 *mpidr)
+{
+    const uint32 *reg;
+    uint32 len;
+
+    reg = fdt_getprop(fdt, cpu, "reg", &len);
+
+    return (reg != NULL && len == ac * 4 && fdt_cells(reg, (int)ac, mpidr)
+        && (*mpidr & ~MPIDR_AFF_MASK) == 0);
+}
+
 static void dtb_parse_cpus(const struct fdt *fdt, const struct fdt_node *cpus)
 {
     struct fdt_node cpu;
-    const uint32 *reg;
     uint64 mpidr;
-    uint32 len;
+    uint32 ac;
     int ok, k;
+
+    if (!fdt_prop_u32(fdt, cpus, "#address-cells", &ac)
+        || (ac != 1 && ac != 2)) {
+        panic("dtb: /cpus #address-cells must be 1 or 2");
+    }
 
     for (ok = fdt_first_subnode(fdt, cpus, &cpu); ok;
         ok = fdt_next_subnode(fdt, cpus, &cpu)) {
@@ -83,13 +99,10 @@ static void dtb_parse_cpus(const struct fdt *fdt, const struct fdt_node *cpus)
             continue;
         }
 
-        reg = fdt_getprop(fdt, &cpu, "reg", &len);
-
-        if (reg == NULL || len < 4) {
+        if (!dtb_cpu_mpidr(fdt, &cpu, ac, &mpidr)) {
+            pr_warn("dtb: %s: reg is not an MPIDR, skipped\n", cpu.name);
             continue;
         }
-
-        mpidr = (len == 4) ? fdt32(*reg) : fdt64(reg);
 
         if (mpidr == boot_mpidr) {
             if (boot_found) {

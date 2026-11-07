@@ -183,6 +183,26 @@ static const void *fdt_fixture(void)
                 SW_STR("device_type", "cpu");
                 SW_CELLS("reg", 2);
             sw_end();
+            sw_begin("cpu@3");
+                SW_STR("device_type", "cpu");
+                SW_CELLS("reg", 0, 3);
+            sw_end();
+            sw_begin("cpu@1000000");
+                SW_STR("device_type", "cpu");
+                SW_CELLS("reg", 0x1000000);
+            sw_end();
+        sw_end();
+        sw_begin("cpus2");
+            SW_CELLS("#address-cells", 2);
+            SW_CELLS("#size-cells", 0);
+            sw_begin("cpu@100000000");
+                SW_STR("device_type", "cpu");
+                SW_CELLS("reg", 1, 0);
+            sw_end();
+            sw_begin("cpu@10000000000");
+                SW_STR("device_type", "cpu");
+                SW_CELLS("reg", 0x100, 0);
+            sw_end();
         sw_end();
         sw_begin("timer");
             SW_STR("compatible", "arm,armv8-timer");
@@ -626,3 +646,26 @@ static void dtb_psci_is_described_or_absent(struct ktest *t)
     KTEST_EXPECT(t, !dtb_cpu_uses_psci(&fdt, &node));
 }
 KTEST_CASE(dtb_psci_is_described_or_absent);
+
+static void dtb_cpu_mpidr_takes_only_affinity(struct ktest *t)
+{
+    struct fdt fdt;
+    struct fdt_node node;
+    uint64 mpidr;
+
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/cpus/cpu@1"));
+    KTEST_EXPECT(t, dtb_cpu_mpidr(&fdt, &node, 1, &mpidr) && mpidr == 1);
+    KTEST_EXPECT(t, !dtb_cpu_mpidr(&fdt, &node, 2, &mpidr));
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/cpus/cpu@3"));
+    KTEST_EXPECT(t, !dtb_cpu_mpidr(&fdt, &node, 1, &mpidr));
+    KTEST_EXPECT(t, dtb_cpu_mpidr(&fdt, &node, 2, &mpidr) && mpidr == 3);
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/cpus/cpu@1000000"));
+    KTEST_EXPECT(t, !dtb_cpu_mpidr(&fdt, &node, 1, &mpidr));
+
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/cpus2/cpu@100000000"));
+    KTEST_EXPECT(t, dtb_cpu_mpidr(&fdt, &node, 2, &mpidr)
+        && mpidr == 0x100000000UL);
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/cpus2/cpu@10000000000"));
+    KTEST_EXPECT(t, !dtb_cpu_mpidr(&fdt, &node, 2, &mpidr));
+}
+KTEST_CASE(dtb_cpu_mpidr_takes_only_affinity);
