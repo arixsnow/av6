@@ -143,6 +143,7 @@ static const void *fdt_fixture(void)
     sw_slen = 0;
     sw_err = 0;
 
+    /* clang-format off */
     sw_begin("");
         SW_CELLS("#address-cells", 2);
         SW_CELLS("#size-cells", 2);
@@ -332,6 +333,7 @@ static const void *fdt_fixture(void)
             SW_CELLS("interrupts", 5);
         sw_end();
     sw_end();
+    /* clang-format on */
 
     return sw_finish();
 }
