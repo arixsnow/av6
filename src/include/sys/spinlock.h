@@ -14,7 +14,7 @@ struct cpu;
 struct spinlock {
     uint locked;
     const char * name;
-    struct cpu *cpu;    /* CPU that hold this lock, NULL if free */
+    struct cpu *cpu;    /* CPU that holds this lock, NULL if free */
 };
 
 void push_off_at(const char *file, int line);

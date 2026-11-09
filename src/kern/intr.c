@@ -29,7 +29,7 @@ struct intr_src {
     void (*handler)(void);      /* ithread context */
     uint64 count;               /* interrupts dispatched */
     uint64 stray;               /* dispatched but unhandled */
-    uint32 irq;                 /* INTID, so the ithread can deactivates */
+    uint32 irq;                 /* INTID, so the ithread can deactivate it */
     volatile int pending;       /* hardirq -> ithread work handoff */
 };
 

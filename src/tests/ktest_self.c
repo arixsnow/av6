@@ -16,7 +16,7 @@ static void ktest_expect_continues(struct ktest *t)
     struct ktest inner;
 
     ktest_init(&inner, "inner", 0);
-    inner.quite = 1;
+    inner.quiet = 1;
 
     KTEST_EXPECT(&inner, false);
     KTEST_EXPECT(&inner, false);
@@ -38,7 +38,7 @@ static void ktest_assert_aborts(struct ktest *t)
     int reached = 0;
 
     ktest_init(&inner, "inner", 0);
-    inner.quite = 1;
+    inner.quiet = 1;
 
     assert_then_mark(&inner, &reached);
 
@@ -59,7 +59,7 @@ static void ktest_skip_is_not_failure(struct ktest *t)
     int reached = 0;
 
     ktest_init(&inner, "inner", 0);
-    inner.quite = 1;
+    inner.quiet = 1;
 
     skip_then_mark(&inner, &reached);
 

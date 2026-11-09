@@ -283,7 +283,7 @@ void kvminithart(void)
 
     asm volatile("msr tcr_el1, %0" : : "r"(tcr));
 
-    /* TTBR0 - pointe to the L0 table */
+    /* TTBR0 and TTBR1 point to the L0 table */
     asm volatile("msr ttbr0_el1, %0" : : "r"(l0_table));
     asm volatile("msr ttbr1_el1, %0" : : "r"(l0_table));
 
@@ -625,7 +625,6 @@ void icache_sync_page(void *page)
     }
     dsb_ish();
     isb();
-    // asm volatile("isb");
 }
 
 /*

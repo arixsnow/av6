@@ -68,7 +68,7 @@ void acquire_spinlock_at(struct spinlock *lk, const char *file, int line)
     push_off_at(file, line);
 
     KASSERT(!holding_spinlock(lk) || panicking,
-        "acquire_spinlock: %s already held held at %s:%d", lk->name, file, line);
+        "acquire_spinlock: %s already held at %s:%d", lk->name, file, line);
 
     while (atomic_swap(&lk->locked, 1) != 0) {
         if (panicking) {

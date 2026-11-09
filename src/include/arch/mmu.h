@@ -158,7 +158,7 @@
 #define SCTLR_EL1_M             (1UL << 0)      /* MMU enable */
 #define SCTLR_EL1_A             (1UL << 1)      /* Alignment fault check */
 #define SCTLR_EL1_C             (1UL << 2)      /* Data cache enable */
-#define SCTLR_EL1_SA            (1UL << 3)      /* SP alignment check, EL1*/
+#define SCTLR_EL1_SA            (1UL << 3)      /* SP alignment check, EL1 */
 #define SCTLR_EL1_SA0           (1UL << 4)      /* SP alignment check, EL0 */
 
 #define SCTLR_EL1_EOS           (1UL << 11)     /* eret is context-synchronizing */

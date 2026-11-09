@@ -36,7 +36,7 @@ struct ktest {
     uint32 checks;              /* expectations evaluated */
     uint32 bad;                 /* or those, failed */
     const char *skip;           /* reason, or NULL */
-    int quite;                  /* record failures, do not print them */
+    int quiet;                  /* record failures, do not print them */
     void *ctx;                  /* setup leaves state here, teardown frees it */
 };
 

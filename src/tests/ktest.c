@@ -83,14 +83,14 @@ int64 ktest_memdiff(const void *a, const void *b, uint64 n)
 
 /*
  * A case saying something that is not a failure. Own verb so the host parser
- * skips it, and quite for the same reason ktest_bad has it.
+ * skips it, and quiet for the same reason ktest_bad has it.
  */
 void ktest_note(struct ktest *t, const char *fmt, ...)
 {
     va_list ap;
     int n, width = KTEST_LINE_MAX - 2;
 
-    if (t->quite) {
+    if (t->quiet) {
         return;
     }
 
@@ -109,7 +109,7 @@ void ktest_note(struct ktest *t, const char *fmt, ...)
 /* what the log must contain for this case to have passed. */
 void ktest_expect_output(struct ktest *t, const char *text)
 {
-    if (t->quite) {
+    if (t->quiet) {
         return;
     }
 
@@ -123,7 +123,7 @@ void ktest_bad(struct ktest *t, const char *file, int lineno, const char *fmt, .
 
     t->bad++;
 
-    if (t->quite) {
+    if (t->quiet) {
         return;
     }
 
