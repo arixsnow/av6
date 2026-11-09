@@ -298,7 +298,7 @@ void userinit(void)
     uintptr entry, sp;
     uint64 sz, elf_size, *w;
     char *stack;
-    int pid;
+    int pid, err;
 
     p = allocproc();
     if (p == NULL) {
@@ -321,8 +321,9 @@ void userinit(void)
     }
     memset(stack, 0, PGSIZE);
 
-    if (mappages(p->pagetable, USER_BASE + sz, KVA_TO_PA((uintptr)stack),
-        PGSIZE, PAGE_USER) < 0) {
+    err = mappages(p->pagetable, USER_BASE + sz, KVA_TO_PA((uintptr)stack),
+        PGSIZE, PAGE_USER);
+    if (err < 0) {
         panic("userinit: stack mappages failed");
     }
 

@@ -60,10 +60,10 @@ void timer_init(void)
 void timer_inithart(void)
 {
     /* Load the countdown */
-    asm volatile("msr cntp_tval_el0, %0" :: "r"(timer_interval));
+    asm volatile("msr cntp_tval_el0, %0" : : "r"(timer_interval));
 
     /* Enable timer, unmask IRQ (bit 0 = enable, bit 1 = 0 (unmask)) */
-    asm volatile("msr cntp_ctl_el0, %0" :: "r"(1UL));
+    asm volatile("msr cntp_ctl_el0, %0" : : "r"(1UL));
 }
 
 int timer_tick(void)
@@ -77,7 +77,7 @@ int timer_tick(void)
      * so the source must be de-asserted (TVAL reloaded) before trap_irq's
      * EOI deactivates it, or it re-pends immediately.
      */
-    asm volatile("msr cntp_tval_el0, %0" :: "r"(timer_interval));
+    asm volatile("msr cntp_tval_el0, %0" : : "r"(timer_interval));
 
     if (cpuid() == 0)
         timer_ticks++;

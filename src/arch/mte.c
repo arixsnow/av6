@@ -41,16 +41,16 @@ void mte_init(void)
     sctlr |= SCTLR_EL1_ATA;
     sctlr |= SCTLR_EL1_ATA0;
 
-    asm volatile("msr sctlr_el1, %0" :: "r"(sctlr));
+    asm volatile("msr sctlr_el1, %0" : : "r"(sctlr));
     isb();
 
-    asm volatile("msr gcr_el1, %0" :: "r"((uint64)GCR_EL1_EXCLUDE_0_F));
+    asm volatile("msr gcr_el1, %0" : : "r"((uint64)GCR_EL1_EXCLUDE_0_F));
 
     asm volatile("mrs %0, mpidr_el1" : "=r"(mpidr));
 
     /* SEED[23:8] non-zero. The low Aff0 byte gives per-CPU divergence */
     seed = (((mpidr & 0xff) + 1) & 0xffff) << RGSR_EL1_SEED_SHIFT;
     seed |= 0x1;        /* TAG[3:0] non-zero starting tag */
-    asm volatile("msr rgsr_el1, %0" :: "r"(seed));
+    asm volatile("msr rgsr_el1, %0" : : "r"(seed));
     isb();
 }

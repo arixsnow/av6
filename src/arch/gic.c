@@ -91,18 +91,18 @@ static uintptr gicr_frame[NCPU_MAX];
 /* ICC (CPU interface) system register helpers */
 static inline void icc_write_sre(uint64 val)
 {
-    asm volatile("msr s3_0_c12_c12_5, %0" :: "r"(val));
+    asm volatile("msr s3_0_c12_c12_5, %0" : : "r"(val));
     isb();
 }
 
 static inline void icc_write_pmr(uint32 val)
 {
-    asm volatile("msr s3_0_c4_c6_0, %0" :: "r"((uint64)val));
+    asm volatile("msr s3_0_c4_c6_0, %0" : : "r"((uint64)val));
 }
 
 static inline void icc_write_igrpen1(uint32 val)
 {
-    asm volatile("msr s3_0_c12_c12_7, %0" :: "r"((uint64)val));
+    asm volatile("msr s3_0_c12_c12_7, %0" : : "r"((uint64)val));
 }
 
 static inline uint32 icc_read_iar1(void)
@@ -116,7 +116,7 @@ static inline uint32 icc_read_iar1(void)
 
 static inline void icc_write_eoir1(uint32 val)
 {
-    asm volatile("msr s3_0_c12_c12_1, %0" :: "r"((uint64)val));
+    asm volatile("msr s3_0_c12_c12_1, %0" : : "r"((uint64)val));
 }
 
 static inline uint64 icc_read_ctlr(void)
@@ -130,13 +130,13 @@ static inline uint64 icc_read_ctlr(void)
 
 static inline void icc_write_ctlr(uint64 val)
 {
-    asm volatile("msr s3_0_c12_c12_4, %0" :: "r"(val));
+    asm volatile("msr s3_0_c12_c12_4, %0" : : "r"(val));
     isb();
 }
 
 static inline void icc_write_dir(uint32 val)
 {
-    asm volatile("msr s3_0_c12_c11_1, %0" :: "r"((uint64)val));
+    asm volatile("msr s3_0_c12_c11_1, %0" : : "r"((uint64)val));
 }
 
 static inline uintptr gicr_base(void)
@@ -455,6 +455,6 @@ void gic_send_sgi_all(uint32 intid)
 {
     uint64 val = (1UL << 40) | ((uint64)(intid & 0xF) << 24);
 
-    asm volatile("msr s3_0_c12_c11_5, %0" :: "r"(val) : "memory");
+    asm volatile("msr s3_0_c12_c11_5, %0" : : "r"(val) : "memory");
     isb();
 }

@@ -28,14 +28,14 @@ void printk_init(void);
 void printk_level(int level, const char *format, ...);
 void printk(const char *format, ...);       /* shorthand for KERN_INFO */
 
-#define pr_emerg(fmt, ...)      printk_level(KERN_EMERG, fmt __VA_OPT__(,) __VA_ARGS__)
-#define pr_alert(fmt, ...)      printk_level(KERN_ALERT, fmt __VA_OPT__(,) __VA_ARGS__)
-#define pr_crit(fmt, ...)      printk_level(KERN_CRIT, fmt __VA_OPT__(,) __VA_ARGS__)
-#define pr_err(fmt, ...)      printk_level(KERN_ERR, fmt __VA_OPT__(,) __VA_ARGS__)
-#define pr_warn(fmt, ...)      printk_level(KERN_WARNING, fmt __VA_OPT__(,) __VA_ARGS__)
-#define pr_notice(fmt, ...)      printk_level(KERN_NOTICE, fmt __VA_OPT__(,) __VA_ARGS__)
-#define pr_info(fmt, ...)      printk_level(KERN_INFO, fmt __VA_OPT__(,) __VA_ARGS__)
-#define pr_debug(fmt, ...)      printk_level(KERN_DEBUG, fmt __VA_OPT__(,) __VA_ARGS__)
+#define pr_emerg(...)     printk_level(KERN_EMERG, __VA_ARGS__)
+#define pr_alert(...)     printk_level(KERN_ALERT, __VA_ARGS__)
+#define pr_crit(...)      printk_level(KERN_CRIT, __VA_ARGS__)
+#define pr_err(...)       printk_level(KERN_ERR, __VA_ARGS__)
+#define pr_warn(...)      printk_level(KERN_WARNING, __VA_ARGS__)
+#define pr_notice(...)    printk_level(KERN_NOTICE, __VA_ARGS__)
+#define pr_info(...)      printk_level(KERN_INFO, __VA_ARGS__)
+#define pr_debug(...)     printk_level(KERN_DEBUG, __VA_ARGS__)
 
 void vprintk(int level, const char *format, va_list arglist);
 

@@ -22,12 +22,12 @@
  * and a lock, so the slab range stops here.
  */
 static const uint16 kmalloc_size[KMALLOC_NCLASS] = {
-    16, 32, 64, 96, 128, 192, 256, 384, 512, 1024
+    16, 32, 64, 96, 128, 192, 256, 384, 512, 1024,
 };
 
 static const char *const kmalloc_name[KMALLOC_NCLASS] = {
     "kmalloc-16", "kmalloc-32", "kmalloc-64", "kmalloc-96", "kmalloc-128",
-    "kmalloc-192", "kmalloc-256", "kmalloc-384", "kmalloc-512", "kmalloc-1024"
+    "kmalloc-192", "kmalloc-256", "kmalloc-384", "kmalloc-512", "kmalloc-1024",
 };
 
 static struct kmem_cache *kmalloc_cache[KMALLOC_NCLASS];
@@ -60,13 +60,16 @@ void kmalloc_init(void)
 
 void *kmalloc(uint64 size)
 {
+    uint8 cls;
+
     if (size == 0) {
         return ZERO_SIZE_PTR;
     }
 
     if (size <= KMALLOC_MAX_SLAB) {
         size = (size + KMALLOC_ALIGN - 1) & ~(uint64)(KMALLOC_ALIGN - 1);
-        return kmem_cache_alloc(kmalloc_cache[kmalloc_idx[size / KMALLOC_ALIGN]]);
+        cls = kmalloc_idx[size / KMALLOC_ALIGN];
+        return kmem_cache_alloc(kmalloc_cache[cls]);
     }
 
     if (size <= PGSIZE) {

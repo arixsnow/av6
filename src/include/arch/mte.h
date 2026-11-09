@@ -122,7 +122,7 @@ static inline void *irg(void *base)
  */
 static inline void stg(void *va)
 {
-    asm volatile("stg %0, [%0]" :: "r"(va) : "memory");
+    asm volatile("stg %0, [%0]" : : "r"(va) : "memory");
 }
 
 /*
@@ -136,7 +136,7 @@ static inline void *ldg(void *va)
 {
     void *tagged = va;
 
-    asm volatile("ldg %0, [%0]" : "+r"(tagged) :: "memory");
+    asm volatile("ldg %0, [%0]" : "+r"(tagged) : : "memory");
     return tagged;
 }
 
@@ -148,7 +148,7 @@ static inline void *ldg(void *va)
  */
 static inline void stzg(void *va)
 {
-    asm volatile("stzg %0, [%0]" :: "r"(va) : "memory");
+    asm volatile("stzg %0, [%0]" : : "r"(va) : "memory");
 }
 
 /*
@@ -159,12 +159,12 @@ static inline void stzg(void *va)
  */
 static inline void st2g(void *va)
 {
-    asm volatile("st2g %0, [%0]" :: "r"(va) : "memory");
+    asm volatile("st2g %0, [%0]" : : "r"(va) : "memory");
 }
 
 static inline void stz2g(void *va)
 {
-    asm volatile("stz2g %0, [%0]" :: "r"(va) : "memory");
+    asm volatile("stz2g %0, [%0]" : : "r"(va) : "memory");
 }
 
 void mte_init(void);

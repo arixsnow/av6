@@ -57,7 +57,7 @@ void ktest_run_all(void);
 
 #define KTEST_REGISTER(fn, setupfn, downfn, fl)                             \
     static const struct ktest_case __ktest_c_##fn = {                       \
-        .name=#fn, .setup=setupfn, .run=fn, .teardown=downfn, .flags=fl     \
+        .name=#fn, .setup=setupfn, .run=fn, .teardown=downfn, .flags=fl,    \
     };                                                                      \
     static const struct ktest_case *const __ktest_p_##fn                    \
         __attribute__((used, section(".ktest"))) = &__ktest_c_##fn          \

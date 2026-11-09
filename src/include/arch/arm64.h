@@ -218,7 +218,7 @@ static inline void tlbi_vmalle1(void)
 static inline void tlbi_aside1is(uint64 asid)
 {
     dsb_ishst();                                /* publish PTE writes first */
-    asm volatile("tlbi aside1is, %0" :: "r"(asid << 48) : "memory");
+    asm volatile("tlbi aside1is, %0" : : "r"(asid << 48) : "memory");
     dsb_ish();                                  /* wait for the broadcast */
     isb();
 }
@@ -232,7 +232,7 @@ static inline void tlbi_vaae1is_range(uint64 va, uint64 npages)
 
     dsb_ishst();
     for (i = 0; i < npages; i++) {
-        asm volatile("tlbi vaae1is, %0" :: "r"(page + i) : "memory");
+        asm volatile("tlbi vaae1is, %0" : : "r"(page + i) : "memory");
     }
     dsb_ish();                                  /* wait for the broadcast */
     isb();
@@ -249,7 +249,7 @@ static inline uint64 read_mpidr(void)
 static inline uint64 read_cntpct(void)
 {
     uint64 val;
-    asm volatile("isb; mrs %0, cntpct_el0" : "=r"(val) :: "memory");
+    asm volatile("isb; mrs %0, cntpct_el0" : "=r"(val) : : "memory");
     return val;
 }
 
@@ -269,7 +269,7 @@ static inline int cpuid(void)
 
 static inline void set_cpuid(uint64 id)
 {
-    asm volatile("msr tpidr_el1, %0" :: "r"(id));
+    asm volatile("msr tpidr_el1, %0" : : "r"(id));
 }
 
 static inline int irq_get(void)

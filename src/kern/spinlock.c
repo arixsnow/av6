@@ -90,7 +90,7 @@ void release_spinlock_at(struct spinlock *lk, const char *file, int line)
      * Ensures all writes protected by this lock are visible
      * to other cores BEFORE the lock appears free.
      */
-    asm volatile("stlr %w0, [%1]" :: "r" (0), "r" (&lk->locked) : "memory");
+    asm volatile("stlr %w0, [%1]" : : "r" (0), "r" (&lk->locked) : "memory");
 
     pop_off_at(file, line);
 }

@@ -43,7 +43,7 @@
 
 #else
 
-#define KASSERT(exp, ...)           do {} while (false)
+#define KASSERT(exp, ...)           ((void)0)
 #define KASSERT_UNREACHABLE()       __builtin_unreachable()
 
 /* Still evaluates: the caller's error path is not a debug feature. */

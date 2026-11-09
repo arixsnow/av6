@@ -59,7 +59,7 @@ static struct {
     {"/init", init_elf_start, init_elf_end},
     {"/argv_test", argvtest_elf_start, argvtest_elf_end},
     {"/fault_test", faulttest_elf_start, faulttest_elf_end},
-    {NULL, NULL, NULL}
+    {NULL, NULL, NULL},
 };
 
 /*
@@ -79,6 +79,7 @@ static int load_segment(pte_t *pagetable, const uchar *src, struct proghdr *ph)
     uintptr va, va_end;
     uint64 file_remaining, copy_now;
     char *page;
+    int err;
 
     if ((ph->vaddr & (PGSIZE - 1)) != 0) {
         return -1;      /* segments must be page-aligned */
@@ -106,8 +107,9 @@ static int load_segment(pte_t *pagetable, const uchar *src, struct proghdr *ph)
 
         icache_sync_page(page);
 
-        if (mappages(pagetable, USER_BASE + va, KVA_TO_PA((uintptr)page),
-                PGSIZE, PAGE_USER) < 0) {
+        err = mappages(pagetable, USER_BASE + va, KVA_TO_PA((uintptr)page),
+            PGSIZE, PAGE_USER);
+        if (err < 0) {
             kpage_free(page);
             return -1;
         }
@@ -276,7 +278,7 @@ int exec(const char *path, uintptr uargv)
     uint64 elf_size, new_sz, pos, off, infosz, *w;
     char *stack, *argbuf;
     const char *base, *q;
-    int i, argc, slen;
+    int i, argc, slen, err;
 
     /* Resolve path : tiny linear scan; table is NULL-terminated */
     for (i = 0; embedded_progs[i].path != NULL; i++) {
@@ -309,8 +311,9 @@ int exec(const char *path, uintptr uargv)
     }
     memset(stack, 0, PGSIZE);
 
-    if (mappages(new_pagetable, USER_BASE + new_sz, KVA_TO_PA((uintptr)stack),
-        PGSIZE, PAGE_USER) < 0) {
+    err = mappages(new_pagetable, USER_BASE + new_sz, KVA_TO_PA((uintptr)stack),
+        PGSIZE, PAGE_USER);
+    if (err < 0) {
         kpage_free(stack);
         uvmfree(new_pagetable);
         return -1;
@@ -325,8 +328,9 @@ int exec(const char *path, uintptr uargv)
             goto bad;
         }
         for (argc = 0; argc < MAXARG; argc++) {
-            if (copyin(&uarg, uargv + (uint64)argc * sizeof(uintptr),
-                sizeof(uarg)) < 0) {
+            err = copyin(&uarg, uargv + (uint64)argc * sizeof(uintptr),
+                sizeof(uarg));
+            if (err < 0) {
                 goto bad;
             }
             if (uarg == 0) {

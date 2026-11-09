@@ -234,6 +234,12 @@ static int has_hafdbs(void)
         != ID_AA64MMFR1_HAFDBS_NONE;
 }
 
+static int has_nmi(void)
+{
+    return SYS_FIELD(read_sysreg(id_aa64pfr1_el1), ID_AA64PFR1_NMI)
+        != ID_AA64PFR1_NMI_NONE;
+}
+
 /*
  * kvminithart - program MMU registers and enable translation
  *
@@ -250,7 +256,7 @@ void kvminithart(void)
 
     /* MAIR: define memory attribute slots */
     mair = MAIR_VALUE;
-    asm volatile("msr mair_el1, %0" :: "r"(mair));
+    asm volatile("msr mair_el1, %0" : : "r"(mair));
 
     /*
      * TCR - translation control
@@ -275,11 +281,11 @@ void kvminithart(void)
         tcr |= TCR_HA;
     }
 
-    asm volatile("msr tcr_el1, %0" :: "r"(tcr));
+    asm volatile("msr tcr_el1, %0" : : "r"(tcr));
 
     /* TTBR0 - pointe to the L0 table */
-    asm volatile("msr ttbr0_el1, %0" :: "r"(l0_table));
-    asm volatile("msr ttbr1_el1, %0" :: "r"(l0_table));
+    asm volatile("msr ttbr0_el1, %0" : : "r"(l0_table));
+    asm volatile("msr ttbr1_el1, %0" : : "r"(l0_table));
 
     /* barriers: ensure all register writes complete */
     dsb();
@@ -304,7 +310,7 @@ void kvminithart(void)
 
     sctlr = SCTLR_EL1_BASE | SCTLR_EL1_M | SCTLR_EL1_C | SCTLR_EL1_I
             | SCTLR_EL1_SA | SCTLR_EL1_SA0;
-    asm volatile("msr sctlr_el1, %0" :: "r"(sctlr));
+    asm volatile("msr sctlr_el1, %0" : : "r"(sctlr));
 
     /* Flush pipeline: CPU must re-fetch with MMU active */
     isb();
@@ -333,8 +339,7 @@ void kvminithart(void)
         printk("kvminithart: MMU enabled, PAN armed, MTE: user tags armed\n");
         printk("cpu: PA %d-bit, HAFDBS %s, FEAT_NMI %s\n",
             parange_bits[pa_range()], has_hafdbs() ? "yes" : "no",
-            SYS_FIELD(read_sysreg(id_aa64pfr1_el1), ID_AA64PFR1_NMI)
-                != ID_AA64PFR1_NMI_NONE ? "yes" : "no");
+            has_nmi() ? "yes" : "no");
     }
 }
 
@@ -611,12 +616,12 @@ void icache_sync_page(void *page)
     uint64 step = cacheline_size();
 
     for (a = base; a < base + PGSIZE; a += step) {
-        asm volatile("dc cvau, %0" :: "r"(a) : "memory");
+        asm volatile("dc cvau, %0" : : "r"(a) : "memory");
     }
     dsb_ish();
 
     for (a = base; a < base + PGSIZE; a += step) {
-        asm volatile("ic ivau, %0" :: "r"(a) : "memory");
+        asm volatile("ic ivau, %0" : : "r"(a) : "memory");
     }
     dsb_ish();
     isb();
@@ -696,6 +701,7 @@ uint64 uvmalloc(pte_t *pagetable, uint64 oldsz, uint64 newsz)
 {
     char *mem;
     uint64 a;
+    int err;
 
     if (newsz < oldsz) {
         return oldsz;
@@ -711,8 +717,9 @@ uint64 uvmalloc(pte_t *pagetable, uint64 oldsz, uint64 newsz)
 
         memset(mem, 0, PGSIZE);
 
-        if (mappages(pagetable, USER_BASE + a, KVA_TO_PA((uintptr)mem),
-            PGSIZE, PAGE_USER) < 0) {
+        err = mappages(pagetable, USER_BASE + a, KVA_TO_PA((uintptr)mem),
+            PGSIZE, PAGE_USER);
+        if (err < 0) {
             kpage_free(mem);
             uvmdealloc(pagetable, a, oldsz);
             return 0;
@@ -924,7 +931,7 @@ void switchuvm(uint16 asid, pte_t *pagetable)
     pa = KVA_TO_PA((uintptr)pagetable);
     ttbr = ((uint64)asid << 48) | pa;
 
-    asm volatile("msr ttbr0_el1, %0" :: "r"(ttbr));
+    asm volatile("msr ttbr0_el1, %0" : : "r"(ttbr));
     isb();
 }
 
