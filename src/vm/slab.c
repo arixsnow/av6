@@ -41,33 +41,33 @@
 #include "vm/kmem.h"
 
 /* objects per magazine */
-#define MAG_DEPTH           15
+#define MAG_DEPTH 15
 
 /* minimum object size and default alignment (16 = MTE granule) */
-#define KMEM_MIN_ALIGN      16
+#define KMEM_MIN_ALIGN 16
 
 /*
  * upper bound on slots in a 1-page slab, sizing the per-slab free bitmap.
  * smallest object is KMEM_MIN_ALIGN bytes, so at most PGSIZE/KMEM_MIN_ALIGN.
  */
-#define SLAB_MAX_OBJS       (PGSIZE / KMEM_MIN_ALIGN)
+#define SLAB_MAX_OBJS (PGSIZE / KMEM_MIN_ALIGN)
 
 struct kmem_cache;
 
 /* a magazine: a small LIFO stack of free-object pointers */
 struct kmem_magazine {
-    LIST_ENTRY(kmem_magazine) link;     /* depot full/empty list */
-    int count;                          /* valid entries in objs[] */
+    LIST_ENTRY(kmem_magazine) link; /* depot full/empty list */
+    int count;                      /* valid entries in objs[] */
     void *objs[MAG_DEPTH];
 };
 LIST_HEAD(kmem_maglist, kmem_magazine);
 
 /* in-slab header: lives at the base of each slab page */
 struct slab {
-    LIST_ENTRY(slab) link;              /* cache partial/full/empty list */
-    struct kmem_cache *cache;           /* owning cache (validation) */
-    int inuse;                          /* slots handed out, magazines included */
-    bit_decl(used, SLAB_MAX_OBJS);      /* 1 = used, bit_ffc finds a free slot */
+    LIST_ENTRY(slab) link;         /* cache partial/full/empty list */
+    struct kmem_cache *cache;      /* owning cache (validation) */
+    int inuse;                     /* slots handed out, magazines included */
+    bit_decl(used, SLAB_MAX_OBJS); /* 1 = used, bit_ffc finds a free slot */
 };
 LIST_HEAD(kmem_slablist, slab);
 
@@ -78,30 +78,30 @@ struct kmem_cpu_cache {
 };
 
 struct kmem_cache {
-    struct spinlock lock;               /* protects the slab lists + depot */
+    struct spinlock lock; /* protects the slab lists + depot */
     const char *name;
-    uint64 objsize;                     /* object size, rounded up to align */
+    uint64 objsize; /* object size, rounded up to align */
     uint64 align;
-    uint32 slots_per_slab;              /* objects in one slab page */
-    uint32 obj_offset;                  /* page base -> object slot 0 */
-    void (*ctor)(void *);               /* run once per object at slab grow */
-    int use_mag;                        /* 0 for the internal caches */
+    uint32 slots_per_slab; /* objects in one slab page */
+    uint32 obj_offset;     /* page base -> object slot 0 */
+    void (*ctor)(void *);  /* run once per object at slab grow */
+    int use_mag;           /* 0 for the internal caches */
 
-    struct kmem_slablist partial;       /* slabs with some free slots */
-    struct kmem_slablist full;          /* slabs with no free slots */
-    struct kmem_slablist empty;         /* all-free slabs, reclaimable */
+    struct kmem_slablist partial; /* slabs with some free slots */
+    struct kmem_slablist full;    /* slabs with no free slots */
+    struct kmem_slablist empty;   /* all-free slabs, reclaimable */
 
-    struct kmem_maglist full_mags;      /* depot: full magazines */
-    struct kmem_maglist empty_mags;     /* depot: empty magazines */
+    struct kmem_maglist full_mags;  /* depot: full magazines */
+    struct kmem_maglist empty_mags; /* depot: empty magazines */
 
     struct kmem_cpu_cache cpu[NCPU_MAX];
 
-    LIST_ENTRY(kmem_cache) link;        /* global cache list (for reclaim) */
+    LIST_ENTRY(kmem_cache) link; /* global cache list (for reclaim) */
 };
 LIST_HEAD(kmem_cachelist, kmem_cache);
 
-static struct kmem_cache cache_cache;       /* hands out struct kmem_cache */
-static struct kmem_cache magazine_cache;    /* hands out struct kmem_magazine */
+static struct kmem_cache cache_cache;    /* hands out struct kmem_cache */
+static struct kmem_cache magazine_cache; /* hands out struct kmem_magazine */
 static struct kmem_cachelist kmem_caches;
 static struct spinlock kmem_caches_lock;
 
@@ -156,8 +156,8 @@ void kmem_init(void)
     init_spinlock(&kmem_caches_lock, "kmem_caches");
     LIST_INIT(&kmem_caches);
 
-    cache_setup(&cache_cache, "kmem_cache", sizeof(struct kmem_cache),
-        0, NULL, 0);
+    cache_setup(&cache_cache, "kmem_cache", sizeof(struct kmem_cache), 0, NULL,
+        0);
 
     cache_setup(&magazine_cache, "kmem_magazine", sizeof(struct kmem_magazine),
         0, NULL, 0);
@@ -185,7 +185,7 @@ static struct slab *slab_grow(struct kmem_cache *c)
     kpage_set_slab(page);
 
     s = (struct slab *)page;
-    memset(s, 0, sizeof(*s));       /* used[] all clear => all slots free */
+    memset(s, 0, sizeof(*s)); /* used[] all clear => all slots free */
     s->cache = c;
     s->inuse = 0;
 
@@ -238,10 +238,13 @@ static void slab_free_locked(struct kmem_cache *c, void *obj)
     int slot, was_full;
 
     s = (struct slab *)PGROUNDDW((uintptr)obj);
-    KASSERT(s->cache == c, "kmem_cache_free: object does not belong to this cache");
+    KASSERT(s->cache == c,
+        "kmem_cache_free: object does not belong to this cache");
 
     slot = (int)(((char *)obj - ((char *)s + c->obj_offset)) / c->objsize);
-    KASSERT(slot >= 0 && (uint32)slot < c->slots_per_slab && bit_test(s->used, slot),
+    KASSERT(slot >= 0
+            && (uint32)slot < c->slots_per_slab
+            && bit_test(s->used, slot),
         "kmem_cache_free: bad address or double free");
 
     was_full = ((uint32)s->inuse == c->slots_per_slab);
@@ -469,7 +472,7 @@ int kmem_reclaim(void)
 
     if (!try_acquire_spinlock(&kmem_caches_lock)) {
         pop_off();
-        return 0;                       /* another CPU is reclaiming or editing the list */
+        return 0; /* another CPU is reclaiming or editing the list */
     }
 
     LIST_FOREACH(c, &kmem_caches, link) {

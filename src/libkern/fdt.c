@@ -20,27 +20,27 @@
 #include "sys/string.h"
 #include "sys/types.h"
 
-#define FDT_MAGIC           0xD00DFEED
-#define FDT_BEGIN_NODE      0x00000001
-#define FDT_END_NODE        0x00000002
-#define FDT_PROP            0x00000003
-#define FDT_NOP             0x00000004
-#define FDT_END             0x00000009
+#define FDT_MAGIC                   0xD00DFEED
+#define FDT_BEGIN_NODE              0x00000001
+#define FDT_END_NODE                0x00000002
+#define FDT_PROP                    0x00000003
+#define FDT_NOP                     0x00000004
+#define FDT_END                     0x00000009
 
-#define FDT_FIRST_SUPPORTED_VERSION     0x02
-#define FDT_LAST_SUPPORTED_VERSION      0x11
+#define FDT_FIRST_SUPPORTED_VERSION 0x02
+#define FDT_LAST_SUPPORTED_VERSION  0x11
 
 struct fdt_tag {
     uint32 type;
-    const char *name;       /* node name, or property name */
-    const void *value;      /* properties only */
+    const char *name;  /* node name, or property name */
+    const void *value; /* properties only */
     uint32 len;
 };
 
 uint32 fdt32(uint32 v)
 {
-    return ((v & 0xFF) << 24) | ((v & 0xFF00) << 8)
-        | ((v & 0xFF0000) >> 8) | ((v >> 24) & 0xFF);
+    return ((v & 0xFF) << 24) | ((v & 0xFF00) << 8) | ((v & 0xFF0000) >> 8)
+        | ((v >> 24) & 0xFF);
 }
 
 uint64 fdt64(const uint32 *cells)
@@ -136,7 +136,8 @@ static const uint32 *fdt_next_tag(const struct fdt *fdt, const uint32 *p,
 
             tag->name = fdt->strings + nameoff;
 
-            if ((const char *)p + align4(tag->len) > (const char *)fdt->struct_end
+            if ((const char *)p + align4(tag->len)
+                    > (const char *)fdt->struct_end
                 || (const char *)p + align4(tag->len) < (const char *)p) {
                 panic("fdt: property value outside the structure block");
             }
@@ -441,8 +442,10 @@ static int fdt_bus_cells(const struct fdt *fdt, const struct fdt_node *bus,
 
     *scells = (int)v;
 
-    return (*acells >= 1 && *acells <= FDT_MAX_CELLS
-        && *scells >= 1 && *scells <= FDT_MAX_CELLS);
+    return (*acells >= 1
+        && *acells <= FDT_MAX_CELLS
+        && *scells >= 1
+        && *scells <= FDT_MAX_CELLS);
 }
 
 static int fdt_range_up(const struct fdt *fdt, const struct fdt_node *bus,
@@ -496,7 +499,8 @@ int fdt_translate_reg(const struct fdt *fdt, const struct fdt_node *node,
 
     reg = fdt_getprop(fdt, node, "reg", &len);
 
-    if (reg == NULL || !fdt_parent(fdt, node, &bus)
+    if (reg == NULL
+        || !fdt_parent(fdt, node, &bus)
         || !fdt_bus_cells(fdt, &bus, &na, &ns)) {
         return 0;
     }
@@ -640,14 +644,16 @@ int fdt_find_path(const struct fdt *fdt, const char *path, uint32 len,
         aliases = *node;
 
         if (!fdt_walk_path(fdt, &aliases, fdt_aliases,
-            fdt_aliases + sizeof(fdt_aliases) - 1)) {
+                fdt_aliases + sizeof(fdt_aliases) - 1)) {
             return 0;
         }
 
         target = fdt_getprop_namelen(fdt, &aliases, path, (uint32)(q - path),
             &tlen);
 
-        if (target == NULL || tlen < 2 || target[0] != '/'
+        if (target == NULL
+            || tlen < 2
+            || target[0] != '/'
             || target[tlen - 1] != '\0') {
             return 0;
         }
@@ -711,7 +717,9 @@ static int fdt_irq_spec(const struct fdt *fdt, const struct fdt_node *node,
         for (off = 0, i = 0; off < len; off += 1 + n, i++) {
             if (!fdt_node_by_phandle(fdt, fdt32(p[off]), parent)
                 || !fdt_prop_u32(fdt, parent, "#interrupt-cells", &n)
-                || n < 1 || n > FDT_MAX_IRQ_ARGS || n > len - off - 1) {
+                || n < 1
+                || n > FDT_MAX_IRQ_ARGS
+                || n > len - off - 1) {
                 return 0;
             }
 
@@ -728,9 +736,11 @@ static int fdt_irq_spec(const struct fdt *fdt, const struct fdt_node *node,
     } else {
         p = fdt_getprop(fdt, node, "interrupts", &len);
 
-        if (p == NULL || !fdt_irq_parent(fdt, node, parent)
+        if (p == NULL
+            || !fdt_irq_parent(fdt, node, parent)
             || !fdt_prop_u32(fdt, parent, "#interrupt-cells", &n)
-            || n < 1 || n > FDT_MAX_IRQ_ARGS
+            || n < 1
+            || n > FDT_MAX_IRQ_ARGS
             || ((uint64)index + 1) * n * 4 > len) {
             return 0;
         }
@@ -756,9 +766,11 @@ static uint32 fdt_irq_unit(const struct fdt *fdt, const struct fdt_node *node,
 
     reg = fdt_getprop(fdt, node, "reg", &len);
 
-    if (reg == NULL || !fdt_parent(fdt, node, &bus)
+    if (reg == NULL
+        || !fdt_parent(fdt, node, &bus)
         || !fdt_prop_u32(fdt, &bus, "#address-cells", &na)
-        || na > FDT_MAX_CELLS || na * 4 > len) {
+        || na > FDT_MAX_CELLS
+        || na * 4 > len) {
         return 0;
     }
 
@@ -787,7 +799,9 @@ static int fdt_irq_map(const struct fdt *fdt, const struct fdt_node *nexus,
 
     ni = irq->ncells;
 
-    if (map == NULL || na > FDT_MAX_CELLS || na + ni > FDT_MAX_IRQ_ARGS
+    if (map == NULL
+        || na > FDT_MAX_CELLS
+        || na + ni > FDT_MAX_IRQ_ARGS
         || (mask != NULL && mlen != (na + ni) * 4)) {
         return 0;
     }

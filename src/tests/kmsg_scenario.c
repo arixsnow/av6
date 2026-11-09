@@ -19,7 +19,7 @@
 #include "sys/types.h"
 #include "tests/ktest.h"
 
-#define HELPER_WAIT_MS          100
+#define HELPER_WAIT_MS 100
 
 static volatile int helper_up[NCPU_MAX];
 static volatile int release;

@@ -20,16 +20,16 @@
  * thing under test here, and a report carried by the subject proves nothing.
  */
 
+#include "tests/ktest.h"
 #include "arch/arm64.h"
 #include "arch/stdarg.h"
 #include "dev/console.h"
 #include "sys/fmt.h"
 #include "sys/param.h"
 #include "sys/types.h"
-#include "tests/ktest.h"
 
-#define KTRF_VERSION        1
-#define KTEST_LINE_MAX      256
+#define KTRF_VERSION   1
+#define KTEST_LINE_MAX 256
 
 extern const struct ktest_case *__ktest_start[];
 extern const struct ktest_case *__ktest_end[];
@@ -50,7 +50,7 @@ static void flush_line(int n)
 
 void ktest_init(struct ktest *t, const char *name, uint32 index)
 {
-    *t = (struct ktest){ .name = name, .index = index };
+    *t = (struct ktest){.name = name, .index = index};
 }
 
 static void ktest_log(const char *fmt, ...)
@@ -116,7 +116,8 @@ void ktest_expect_output(struct ktest *t, const char *text)
     ktest_log("expect %u %s", t->index, text);
 }
 
-void ktest_bad(struct ktest *t, const char *file, int lineno, const char *fmt, ...)
+void ktest_bad(struct ktest *t, const char *file, int lineno, const char *fmt,
+    ...)
 {
     va_list ap;
     int n, width = KTEST_LINE_MAX - 2;
@@ -127,8 +128,8 @@ void ktest_bad(struct ktest *t, const char *file, int lineno, const char *fmt, .
         return;
     }
 
-    n = snprintf(line, KTEST_LINE_MAX - 1, "ktest: bad %u %s:%d ",
-        t->index, file, lineno);
+    n = snprintf(line, KTEST_LINE_MAX - 1, "ktest: bad %u %s:%d ", t->index,
+        file, lineno);
     if (n > width) {
         n = width;
     }
@@ -151,11 +152,13 @@ static uint64 to_us(uint64 ticks, uint64 freq)
 }
 
 #ifdef KTEST_SCENARIO_NAME
-#define wanted(c) (((c)->flags & KTEST_NORETURN) &&                             \
-                    strcmp((c)->name, KTEST_SCENARIO_NAME) == 0)
+#define wanted(c)                  \
+    (((c)->flags & KTEST_NORETURN) \
+        && strcmp((c)->name, KTEST_SCENARIO_NAME) == 0)
 #elif defined(KTEST_ONLY)
-#define wanted(c) (!((c)->flags & KTEST_NORETURN) &&                            \
-                    strncmp((c)->name, KTEST_ONLY, strlen(KTEST_ONLY)) == 0)
+#define wanted(c)                   \
+    (!((c)->flags & KTEST_NORETURN) \
+        && strncmp((c)->name, KTEST_ONLY, strlen(KTEST_ONLY)) == 0)
 #else
 #define wanted(c) (!((c)->flags & KTEST_NORETURN))
 #endif
@@ -218,8 +221,8 @@ void ktest_run_all(void)
             ktest_log("skip %u %s %s", t.index, t.name, t.skip);
         } else {
             pass++;
-            ktest_log("pass %u %s checks=%u us=%lu", t.index, t.name,
-                t.checks, us);
+            ktest_log("pass %u %s checks=%u us=%lu", t.index, t.name, t.checks,
+                us);
         }
     }
 

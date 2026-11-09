@@ -16,10 +16,10 @@
 #include "sys/proc.h"
 #include "sys/types.h"
 
-#define PANIC_CPU_NONE      (~0UL)
+#define PANIC_CPU_NONE (~0UL)
 
 /* One second for the panic SGI to be taken, or a spin count if CNTFRQ is 0. */
-#define PANIC_STOP_SPINS    100000000UL
+#define PANIC_STOP_SPINS 100000000UL
 
 volatile int panicking;
 static volatile uint64 panic_cpu = PANIC_CPU_NONE;
@@ -90,7 +90,7 @@ static int panic_stop_others(void)
         }
     }
 
-    dmb();      /* pairs with the dsb_ishst() in panic_stop_self() */
+    dmb(); /* pairs with the dsb_ishst() in panic_stop_self() */
 
     return stuck;
 }
@@ -111,8 +111,7 @@ static void panic_report_stuck(void)
         printk_level(KERN_EMERG,
             "PANIC: cpu%d still running %s (state=%d noff=%d intena=%d lr=%p off=%s:%d)\n",
             i, (p != NULL) ? p->name : "scheduler",
-            (p != NULL) ? (int)p->state : -1,
-            cpus[i].noff, cpus[i].intena,
+            (p != NULL) ? (int)p->state : -1, cpus[i].noff, cpus[i].intena,
             (p != NULL) ? p->context.x30 : 0,
             (cpus[i].off_file != NULL) ? cpus[i].off_file : "?",
             cpus[i].off_line);

@@ -16,12 +16,12 @@
 
 #include "sys/types.h"
 
-#define ZERO_SIZE_PTR           ((void *)16)
-#define ZERO_OR_NULL_PTR(x)     ((uintptr)(x) <= (uintptr)ZERO_SIZE_PTR)
-#define KMALLOC_MAX_SLAB        1024
+#define ZERO_SIZE_PTR       ((void *)16)
+#define ZERO_OR_NULL_PTR(x) ((uintptr)(x) <= (uintptr)ZERO_SIZE_PTR)
+#define KMALLOC_MAX_SLAB    1024
 
 void kmalloc_init(void);
 void *kmalloc(uint64 size);
 void kfree(void *ptr);
 
-#endif  /* _AV6_KMALLOC_H_ */
+#endif /* _AV6_KMALLOC_H_ */

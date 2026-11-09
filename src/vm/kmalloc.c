@@ -4,15 +4,15 @@
  * can be found in the LICENSE file.
  */
 
+#include "vm/kmalloc.h"
 #include "arch/mmu.h"
 #include "sys/kio.h"
 #include "sys/types.h"
 #include "vm/kalloc.h"
-#include "vm/kmalloc.h"
 #include "vm/kmem.h"
 
-#define KMALLOC_ALIGN       16
-#define KMALLOC_NCLASS      10
+#define KMALLOC_ALIGN  16
+#define KMALLOC_NCLASS 10
 
 /*
  * A 4096-byte slab with a 64-byte header: 192 wastes 1% where
@@ -22,12 +22,29 @@
  * and a lock, so the slab range stops here.
  */
 static const uint16 kmalloc_size[KMALLOC_NCLASS] = {
-    16, 32, 64, 96, 128, 192, 256, 384, 512, 1024,
+    16,
+    32,
+    64,
+    96,
+    128,
+    192,
+    256,
+    384,
+    512,
+    1024,
 };
 
 static const char *const kmalloc_name[KMALLOC_NCLASS] = {
-    "kmalloc-16", "kmalloc-32", "kmalloc-64", "kmalloc-96", "kmalloc-128",
-    "kmalloc-192", "kmalloc-256", "kmalloc-384", "kmalloc-512", "kmalloc-1024",
+    "kmalloc-16",
+    "kmalloc-32",
+    "kmalloc-64",
+    "kmalloc-96",
+    "kmalloc-128",
+    "kmalloc-192",
+    "kmalloc-256",
+    "kmalloc-384",
+    "kmalloc-512",
+    "kmalloc-1024",
 };
 
 static struct kmem_cache *kmalloc_cache[KMALLOC_NCLASS];
@@ -49,8 +66,8 @@ void kmalloc_init(void)
     }
 
     for (i = 0; i < KMALLOC_NCLASS; i++) {
-        kmalloc_cache[i] = kmem_cache_create(kmalloc_name[i],
-            kmalloc_size[i], KMALLOC_ALIGN, NULL);
+        kmalloc_cache[i] = kmem_cache_create(kmalloc_name[i], kmalloc_size[i],
+            KMALLOC_ALIGN, NULL);
 
         if (kmalloc_cache[i] == NULL) {
             panic("kmalloc_init: no cache for %u bytes", kmalloc_size[i]);

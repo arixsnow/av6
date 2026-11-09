@@ -20,20 +20,20 @@
  * are fetched from the trapframe by argint / argaddr / arglong
  * in syscall.c. Return value lands in tf->x[0].
  */
-#define SYS_getpid      1
-#define SYS_write       2
-#define SYS_fork        3
-#define SYS_exit        4
-#define SYS_wait        5
-#define SYS_kill        6
-#define SYS_sbrk        7
-#define SYS_exec        8
-#define SYS_read        9
+#define SYS_getpid 1
+#define SYS_write  2
+#define SYS_fork   3
+#define SYS_exit   4
+#define SYS_wait   5
+#define SYS_kill   6
+#define SYS_sbrk   7
+#define SYS_exec   8
+#define SYS_read   9
 
 #ifndef __ASSEMBLER__
 
 void syscall(void);
 
-#endif      /* __ASSEMBLER__ */
+#endif /* __ASSEMBLER__ */
 
-#endif      /* _AV6_SYSCALL_H_ */
+#endif /* _AV6_SYSCALL_H_ */

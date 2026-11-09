@@ -20,4 +20,4 @@ void kpage_free(char *vaddr);
 void kpage_set_slab(void *va);
 int kpage_is_slab(void *va);
 
-#endif  /* _AV6_KALLOC_H_ */
+#endif /* _AV6_KALLOC_H_ */

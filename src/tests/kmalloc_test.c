@@ -14,13 +14,40 @@
 #include "tests/ktest.h"
 #include "vm/kmalloc.h"
 
-#define NBLOCK          4
+#define NBLOCK 4
 
 /* Both sides of every class edge, so a mis-indexed size shows as overlap. */
 static const uint16 edge[] = {
-    1, 15, 16, 17, 31, 32, 33, 63, 64, 65, 95, 96, 97,
-    127, 128, 129, 191, 192, 193, 255, 256, 257,
-    383, 384, 385, 511, 512, 513, 1023, 1024,
+    1,
+    15,
+    16,
+    17,
+    31,
+    32,
+    33,
+    63,
+    64,
+    65,
+    95,
+    96,
+    97,
+    127,
+    128,
+    129,
+    191,
+    192,
+    193,
+    255,
+    256,
+    257,
+    383,
+    384,
+    385,
+    511,
+    512,
+    513,
+    1023,
+    1024,
 };
 
 static void *blk[NBLOCK];

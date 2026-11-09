@@ -48,4 +48,4 @@ void kmem_free(void *obj);
 void kmem_cache_destroy(struct kmem_cache *cache);
 int kmem_reclaim(void);
 
-#endif  /* _AV6_KMEM_H_ */
+#endif /* _AV6_KMEM_H_ */

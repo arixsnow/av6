@@ -37,8 +37,8 @@ struct context {
     uint64 x26;
     uint64 x27;
     uint64 x28;
-    uint64 x29;     /* frame pointer */
-    uint64 x30;     /* link register (return address) */
+    uint64 x29; /* frame pointer */
+    uint64 x30; /* link register (return address) */
     uint64 sp;
 };
 
@@ -59,20 +59,20 @@ struct context {
  *      pop_off;        noff=0, IRQs restored
  */
 struct cpu {
-    struct proc *proc;          /* currently running process, or NULL */
-    struct context context;     /* swtch() here to enter scheduler() */
-    int noff;                   /* depth of push_off nesting */
-    int intena;                 /* were IRQs enabled before first push_off? */
-    const char *off_file;       /* caller of the outermost push_off, for panic */
+    struct proc *proc;      /* currently running process, or NULL */
+    struct context context; /* swtch() here to enter scheduler() */
+    int noff;               /* depth of push_off nesting */
+    int intena;             /* were IRQs enabled before first push_off? */
+    const char *off_file;   /* caller of the outermost push_off, for panic */
     int off_line;
-    int need_resched;           /* clock asked to preempt, consumed at trap return */
-    uint64 asid_active;         /* atomic ctx in TTBR0. 0 when drained */
-    volatile int online;        /* set when bringup is done, smp_init() polls it */
-    volatile int halted;        /* parked by panic, panic_stop_others() waits on it */
-    uint64 asid_reserved;       /* plain ctx carried across last rollover */
-    int in_kmsg;                /* inside kmsg_add: re-entry takes the bypass */
+    int need_resched;     /* clock asked to preempt, consumed at trap return */
+    uint64 asid_active;   /* atomic ctx in TTBR0. 0 when drained */
+    volatile int online;  /* set when bringup is done, smp_init() polls it */
+    volatile int halted;  /* parked by panic, panic_stop_others() waits on it */
+    uint64 asid_reserved; /* plain ctx carried across last rollover */
+    int in_kmsg;          /* inside kmsg_add: re-entry takes the bypass */
 };
 
 extern struct cpu cpus[NCPU_MAX];
 
-#endif      /* _AV6_CPU_H_ */
+#endif /* _AV6_CPU_H_ */

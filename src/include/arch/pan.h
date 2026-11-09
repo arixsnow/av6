@@ -31,7 +31,7 @@
  * the first exception.
  */
 
-#define SCTLR_EL1_SPAN          (1UL << 23)
+#define SCTLR_EL1_SPAN (1UL << 23)
 
 /*
  * Check whether the CPU implements FEAT_PAN.
@@ -70,4 +70,4 @@ static inline void pan_off(void)
     asm volatile("msr pan, #0" ::: "memory");
 }
 
-#endif      /* _AV6_PAN_H_ */
+#endif /* _AV6_PAN_H_ */

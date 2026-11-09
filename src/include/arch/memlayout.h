@@ -30,7 +30,7 @@
  *      PA 0x40080000 (kernel) -> KVA 0xFFFF_0000_4008_0000
  */
 
-#define KERN_BASE       0xFFFF000000000000UL
+#define KERN_BASE 0xFFFF000000000000UL
 
 /*
  * QEMU virt machine physical memory map
@@ -43,9 +43,9 @@
  */
 
 /* Device Physical addresses (for early boot, DTB) */
-#define GICD_BASE_PA    0x08000000UL        /* Distributor: global, routes SPIs */
-#define GICR_BASE_PA    0x080A0000UL        /* Redistributor: per-CPU, SGIs/PPIs */
-#define UART0_BASE_PA   0x09000000UL
+#define GICD_BASE_PA  0x08000000UL /* Distributor: global, routes SPIs */
+#define GICR_BASE_PA  0x080A0000UL /* Redistributor: per-CPU, SGIs/PPIs */
+#define UART0_BASE_PA 0x09000000UL
 
 /*
  * Kernel Virtual Address <-> Physical Address
@@ -53,12 +53,12 @@
  * The kernel identity-maps all physical memory at offset KERN_BASE
  * These macros convert between the two.
  */
-#define KVA_TO_PA(addr)     ((uintptr)(addr) - KERN_BASE)
-#define PA_TO_KVA(addr)     ((uintptr)(addr) + KERN_BASE)
+#define KVA_TO_PA(addr) ((uintptr)(addr) - KERN_BASE)
+#define PA_TO_KVA(addr) ((uintptr)(addr) + KERN_BASE)
 
 /* Legacy names used throughout the codebase */
-#define VTP(addr)           KVA_TO_PA(addr)
-#define PTV(addr)           ((char *)PA_TO_KVA(addr))
+#define VTP(addr) KVA_TO_PA(addr)
+#define PTV(addr) ((char *)PA_TO_KVA(addr))
 
 /*
  * Device kernel virtual addresses (DMAP)
@@ -66,9 +66,9 @@
  * After MMU is on, all device MMIO must go through TTBR1
  * so that TTBR0 can be per-process user page tables.
  */
-#define GICD_BASE           (KERN_BASE + GICD_BASE_PA)
-#define GICR_BASE           (KERN_BASE + GICR_BASE_PA)
-#define UART0_BASE          (KERN_BASE + UART0_BASE_PA)
+#define GICD_BASE  (KERN_BASE + GICD_BASE_PA)
+#define GICR_BASE  (KERN_BASE + GICR_BASE_PA)
+#define UART0_BASE (KERN_BASE + UART0_BASE_PA)
 
 /*
  * Kernel-stack window: a 4-KB granule region for per-proc kernel stacks at a
@@ -87,13 +87,13 @@
  * SP (upper half) has bit KSTACK_SHIFT set. A push into the guard clears it,
  * caught before the guard is ever touched.
  */
-#define KSTACK_WINDOW_L1    511
-#define KSTACK_WINDOW       (KERN_BASE + (511UL << 30))
-#define KSTACK_WINDOW_SIZE  (1UL << 30)
-#define KSTACK_PAGES        4
-#define KSTACK_GUARD_PAGES  4
-#define KSTACK_SLOT_PAGES   (KSTACK_GUARD_PAGES + KSTACK_PAGES)
-#define KSTACK_NSLOTS       (KSTACK_WINDOW_SIZE / (KSTACK_SLOT_PAGES * PGSIZE))
+#define KSTACK_WINDOW_L1   511
+#define KSTACK_WINDOW      (KERN_BASE + (511UL << 30))
+#define KSTACK_WINDOW_SIZE (1UL << 30)
+#define KSTACK_PAGES       4
+#define KSTACK_GUARD_PAGES 4
+#define KSTACK_SLOT_PAGES  (KSTACK_GUARD_PAGES + KSTACK_PAGES)
+#define KSTACK_NSLOTS      (KSTACK_WINDOW_SIZE / (KSTACK_SLOT_PAGES * PGSIZE))
 
 /*
  * MTE tag stripping for kernel virtual addresses.
@@ -104,7 +104,7 @@
  * IRG replaces [59:56] with a random tag: 0xFF -> 0xFX.
  * OR-ing bits [59:56] back to 1 restores the clean KVA.
  */
-#define KVA_STRIP_TAG(addr)     ((uintptr)(addr) | (0xFUL << 56))
+#define KVA_STRIP_TAG(addr) ((uintptr)(addr) | (0xFUL << 56))
 
 /*
  * User virtual address layout
@@ -113,6 +113,6 @@
  * (grows down into the same page) for now!
  * Later should add text/data/stack/heap separation.
  */
-#define USER_BASE               0x0UL
+#define USER_BASE 0x0UL
 
-#endif  /* _AV6_MEMLAYOUT_H_ */
+#endif /* _AV6_MEMLAYOUT_H_ */

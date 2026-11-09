@@ -4,14 +4,14 @@
  * can be found in the LICENSE file.
  */
 
-#include "arch/stdarg.h"
 #include "sys/fmt.h"
+#include "arch/stdarg.h"
 #include "sys/types.h"
 
-#define FMT_ALT         0x01
-#define FMT_ZERO        0x02
-#define FMT_LONG        0x04
-#define FMT_SIGN        0x08
+#define FMT_ALT  0x01
+#define FMT_ZERO 0x02
+#define FMT_LONG 0x04
+#define FMT_SIGN 0x08
 
 struct fmt_spec {
     uint8 base;
@@ -40,7 +40,8 @@ static char *emit_str(char *str, char *end, const char *s)
 }
 
 /* Sign and prefix count against the field width, as printf(3) has them. */
-static char *emit_num(char *str, char *end, uint64 v, int neg, struct fmt_spec spec)
+static char *emit_num(char *str, char *end, uint64 v, int neg,
+    struct fmt_spec spec)
 {
     char tmp[32];
     char pfx[2];
@@ -53,7 +54,7 @@ static char *emit_num(char *str, char *end, uint64 v, int neg, struct fmt_spec s
 
     np = 0;
     if (neg) {
-        pfx[np++] ='-';
+        pfx[np++] = '-';
     } else if (spec.flags & FMT_ALT) {
         pfx[np++] = '0';
         if (spec.base == 16) {
@@ -142,7 +143,8 @@ int vsnprintf(char *buf, uint64 size, const char *fmt, va_list ap)
 
         switch (c) {
             case 'd':
-                sv = (spec.flags & FMT_LONG) ? va_arg(ap, int64) : (int64)va_arg(ap, int);
+                sv = (spec.flags & FMT_LONG) ? va_arg(ap, int64)
+                                             : (int64)va_arg(ap, int);
                 neg = (sv < 0);
                 v = neg ? (uint64)-sv : (uint64)sv;
                 str = emit_num(str, end, v, neg, spec);
@@ -156,7 +158,8 @@ int vsnprintf(char *buf, uint64 size, const char *fmt, va_list ap)
                 }
                 /* FALLTHROUGH */
             case 'u':
-                v = (spec.flags & FMT_LONG) ? va_arg(ap, uint64) : (uint64)va_arg(ap, uint);
+                v = (spec.flags & FMT_LONG) ? va_arg(ap, uint64)
+                                            : (uint64)va_arg(ap, uint);
                 str = emit_num(str, end, v, 0, spec);
                 break;
             case 'p':

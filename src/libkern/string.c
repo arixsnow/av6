@@ -6,12 +6,13 @@
 
 #include "sys/string.h"
 
-void * memset(void *dst, uchar c, uint64 n)
+void *memset(void *dst, uchar c, uint64 n)
 {
-  for (uint64 i = 0; i < n; i++)
-    ((uchar *)dst)[i] = c;
+    for (uint64 i = 0; i < n; i++) {
+        ((uchar *)dst)[i] = c;
+    }
 
-  return dst;
+    return dst;
 }
 
 /*
@@ -91,28 +92,28 @@ void *memmove(void *dst, const void *src, uint64 n)
         while (n-- > 0) {
             *d++ = *s++;
         }
-     } else {
-         d += n;
-         s += n;
+    } else {
+        d += n;
+        s += n;
 
-         while (n > 0 && ((uintptr)d & 7)) {
-             *--d = *--s;
-             n--;
-         }
+        while (n > 0 && ((uintptr)d & 7)) {
+            *--d = *--s;
+            n--;
+        }
 
-         wd = (uint64 *)d;
-         ws = (const uint64 *)s;
-         while (n >= 8) {
-             *--wd = *--ws;
-             n -= 8;
-         }
+        wd = (uint64 *)d;
+        ws = (const uint64 *)s;
+        while (n >= 8) {
+            *--wd = *--ws;
+            n -= 8;
+        }
 
-         d = (uchar *)wd;
-         s = (const uchar *)ws;
-         while (n-- > 0) {
-             *--d = *--s;
-         }
-     }
+        d = (uchar *)wd;
+        s = (const uchar *)ws;
+        while (n-- > 0) {
+            *--d = *--s;
+        }
+    }
 
     return dst;
 }
@@ -132,14 +133,15 @@ int memcmp(const void *s1, const void *s2, uint64 n)
 
 uint64 strlen(const char *str)
 {
-  uint len;
+    uint len;
 
-  len = 0;
+    len = 0;
 
-  while (str[len] != '\0')
-    len++;
+    while (str[len] != '\0') {
+        len++;
+    }
 
-  return len;
+    return len;
 }
 
 char *strncpy(char *dst, const char *src, uint64 n)
@@ -167,18 +169,18 @@ int strcmp(const char *str1, const char *str2)
         }
     }
 
-    return (*(const uchar *) str1 < *(const uchar *) str2) ? -1 : 1;
+    return (*(const uchar *)str1 < *(const uchar *)str2) ? -1 : 1;
 }
 
 int strncmp(const char *str1, const char *str2, uint64 n)
 {
-  for (; 0 < n; n--, str1++, str2++)
-  {
-    if (*str1 != *str2)
-      return (*(const uchar *) str1 < *(const uchar *) str2) ? -1 : 1;
-    else if (*str1 == '\0')
-      break;
-  }
+    for (; 0 < n; n--, str1++, str2++) {
+        if (*str1 != *str2) {
+            return (*(const uchar *)str1 < *(const uchar *)str2) ? -1 : 1;
+        } else if (*str1 == '\0') {
+            break;
+        }
+    }
 
-  return 0;
+    return 0;
 }

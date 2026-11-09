@@ -11,4 +11,4 @@ void timer_init(void);
 void timer_inithart(void);
 int timer_tick(void);
 
-#endif  /* _AV6_TIMER_H_ */
+#endif /* _AV6_TIMER_H_ */

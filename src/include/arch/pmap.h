@@ -35,4 +35,4 @@ void switchuvm_reserved(void);
 /* Cache maintenance */
 void icache_sync_page(void *page);
 
-#endif  /* _AV6_PMAP_H_ */
+#endif /* _AV6_PMAP_H_ */

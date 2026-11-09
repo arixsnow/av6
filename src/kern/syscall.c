@@ -26,19 +26,19 @@
  * silently succeeding.
  */
 
+#include "sys/syscall.h"
+#include "arch/copy.h"
+#include "arch/trapframe.h"
 #include "dev/console.h"
 #include "sys/exec.h"
+#include "sys/kassert.h"
 #include "sys/kio.h"
 #include "sys/proc.h"
-#include "sys/syscall.h"
-#include "arch/trapframe.h"
 #include "sys/types.h"
-#include "arch/copy.h"
-#include "sys/kassert.h"
 
 /* Max bytes copied per copyin round-trip inside sys_write. */
-#define WRITE_BOUNCE_SZ     128
-#define READ_BOUNCE_SZ      128
+#define WRITE_BOUNCE_SZ 128
+#define READ_BOUNCE_SZ  128
 
 /*
  * Fetch the nth syscall argument as a raw 64-bit value.
@@ -52,7 +52,7 @@ static uint64 argraw(int n)
 {
     struct trapframe *tf = myproc()->tf;
 
-    KASSERT(n >= 0 && n <=5, "argraw: bad arg index");
+    KASSERT(n >= 0 && n <= 5, "argraw: bad arg index");
 
     return tf->x[n];
 }
@@ -274,7 +274,7 @@ static uint64 sys_read(void)
     chunk = (n < sizeof(bounce)) ? n : sizeof(bounce);
     got = console_read(bounce, chunk);
     if (got <= 0) {
-        return (uint64)got;     /* 0 = EOF (Ctrl-D) */
+        return (uint64)got; /* 0 = EOF (Ctrl-D) */
     }
 
     if (copyout(user_buf, bounce, got) < 0) {
@@ -283,7 +283,6 @@ static uint64 sys_read(void)
 
     return got;
 }
-
 
 static uint64 (*syscalls[])(void) = {
     [SYS_getpid] = sys_getpid,

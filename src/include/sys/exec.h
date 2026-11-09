@@ -14,7 +14,7 @@
  * syscalls. Includes the trailing NUL. Lives on the kernel stack of the
  * syscall handler, so keep modest.
  */
-#define MAXPATH         128
+#define MAXPATH 128
 
 /*
  * exec() argv limits. The argv strings are copied (packed, NUL-separated)
@@ -22,7 +22,7 @@
  * bytes are bounded to one page. MAXARG bounds the number
  * of argv entries (excludes the NULL terminator).
  */
-#define MAXARG          32
+#define MAXARG 32
 
 /*
  * loadelf : parse an ELF blob and populate pagetable with its segments.
@@ -59,4 +59,4 @@ int loadelf(pte_t *pagetable, const uchar *bytes, uint64 size,
  */
 int exec(const char *path, uintptr uargv);
 
-#endif      /* _AV6_EXEC_H_ */
+#endif /* _AV6_EXEC_H_ */

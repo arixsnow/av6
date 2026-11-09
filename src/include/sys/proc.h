@@ -7,23 +7,30 @@
 #ifndef _AV6_PROC_H_
 #define _AV6_PROC_H_
 
-#include "sys/types.h"
+#include "arch/cpu.h"
+#include "arch/trapframe.h"
+#include "sys/list.h"
 #include "sys/param.h"
 #include "sys/spinlock.h"
-#include "arch/cpu.h"
-#include "sys/list.h"
-#include "arch/trapframe.h"
+#include "sys/types.h"
 
-enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+enum procstate {
+    UNUSED,
+    USED,
+    SLEEPING,
+    RUNNABLE,
+    RUNNING,
+    ZOMBIE
+};
 
 struct proc {
     struct spinlock lock;
 
     /* p->lock must be held when using these */
     enum procstate state;
-    void *chan;             /* if non-zero, sleeping on chan */
+    void *chan; /* if non-zero, sleeping on chan */
     int killed;
-    int xstate;             /* exit status for parent's wait */
+    int xstate; /* exit status for parent's wait */
     int pid;
 
     /* wait_lock must be held when using this: */
@@ -40,10 +47,10 @@ struct proc {
     struct context context; /* swtch() here to run process */
     char name[16];
 
-    int kslot;                      /* kstack-window slot id */
-    LIST_ENTRY(proc) all_link;      /* allproc list (ptable_lock) */
-    LIST_ENTRY(proc) pid_link;      /* pid -> proc hash (ptable_lock) */
-    TAILQ_ENTRY(proc) runq_link;    /* scheduler run queue (runq_lock) */
+    int kslot;                   /* kstack-window slot id */
+    LIST_ENTRY(proc) all_link;   /* allproc list (ptable_lock) */
+    LIST_ENTRY(proc) pid_link;   /* pid -> proc hash (ptable_lock) */
+    TAILQ_ENTRY(proc) runq_link; /* scheduler run queue (runq_lock) */
 };
 
 extern struct proc *initproc;
@@ -66,4 +73,4 @@ int kill(int pid);
 int killed(struct proc *p);
 int growproc(int n);
 
-#endif      /* _AV6_PROC_H_ */
+#endif /* _AV6_PROC_H_ */

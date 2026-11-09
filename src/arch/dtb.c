@@ -14,8 +14,8 @@
  * One consumer per node type. The walk and its bounds live in the fdt reader.
  */
 
-#include "arch/arm64.h"
 #include "arch/dtb.h"
+#include "arch/arm64.h"
 #include "arch/gic.h"
 #include "arch/memlayout.h"
 #include "arch/platform.h"
@@ -26,10 +26,10 @@
 #include "vm/physmem.h"
 
 /* First cell of a GIC interrupt specifier */
-#define DT_INTR_SPI         0
-#define DT_INTR_PPI         1
+#define DT_INTR_SPI      0
+#define DT_INTR_PPI      1
 
-#define DT_TIMER_PHYS_NS    1
+#define DT_TIMER_PHYS_NS 1
 
 /* Runtime hardware parameters */
 int ncpus;
@@ -76,7 +76,9 @@ int dtb_cpu_mpidr(const struct fdt *fdt, const struct fdt_node *cpu, uint32 ac,
 
     reg = fdt_getprop(fdt, cpu, "reg", &len);
 
-    return (reg != NULL && len == ac * 4 && fdt_cells(reg, (int)ac, mpidr)
+    return (reg != NULL
+        && len == ac * 4
+        && fdt_cells(reg, (int)ac, mpidr)
         && (*mpidr & ~MPIDR_AFF_MASK) == 0);
 }
 
@@ -138,7 +140,9 @@ int dtb_is_memory(const struct fdt *fdt, const struct fdt_node *node)
 
     type = fdt_getprop(fdt, node, "device_type", &len);
 
-    return (type != NULL && len > 0 && type[len - 1] == '\0'
+    return (type != NULL
+        && len > 0
+        && type[len - 1] == '\0'
         && strcmp(type, "memory") == 0);
 }
 
@@ -203,7 +207,9 @@ int dtb_cpu_uses_psci(const struct fdt *fdt, const struct fdt_node *cpu)
 
     method = fdt_getprop(fdt, cpu, "enable-method", &len);
 
-    return (method != NULL && len > 0 && method[len - 1] == '\0'
+    return (method != NULL
+        && len > 0
+        && method[len - 1] == '\0'
         && strcmp(method, "psci") == 0);
 }
 
@@ -333,7 +339,8 @@ void dtb_init(void *dtb)
 
     dtb_parse_uart(&fdt, &console);
 
-    if (platform.uart_clk == 0 && uart_clk_phandle != 0
+    if (platform.uart_clk == 0
+        && uart_clk_phandle != 0
         && fdt_node_by_phandle(&fdt, uart_clk_phandle, &clk)) {
         fdt_prop_u32(&fdt, &clk, "clock-frequency", &platform.uart_clk);
     }
@@ -343,8 +350,8 @@ void dtb_init(void *dtb)
     }
 
     if (cpu_overflow) {
-        printk("dtb: more than %d CPUs present, using %d\n",
-            NCPU_MAX, NCPU_MAX);
+        printk("dtb: more than %d CPUs present, using %d\n", NCPU_MAX,
+            NCPU_MAX);
     }
 
     if (nbanks == 0) {
@@ -363,11 +370,12 @@ void dtb_init(void *dtb)
     physmem_print();
 
     printk("dtb: PSCI conduit = %s\n",
-        psci_conduit == PSCI_CONDUIT_SMC ? "smc"
-        : psci_conduit == PSCI_CONDUIT_HVC ? "hvc" : "none");
+        psci_conduit == PSCI_CONDUIT_SMC       ? "smc"
+            : psci_conduit == PSCI_CONDUIT_HVC ? "hvc"
+                                               : "none");
 
-    printk("platform: uart=%p irq=%u clk=%u Hz\n",
-        (void *)platform.uart_base, platform.uart_irq, platform.uart_clk);
+    printk("platform: uart=%p irq=%u clk=%u Hz\n", (void *)platform.uart_base,
+        platform.uart_irq, platform.uart_clk);
 
     printk("platform: gicd=%p gicr=%p timer irq=%u\n",
         (void *)platform.gicd_base, (void *)platform.gicr_base,

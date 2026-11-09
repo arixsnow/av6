@@ -11,25 +11,25 @@
  * for CPU power management.
  */
 
+#include "arch/smp.h"
 #include "arch/arm64.h"
 #include "arch/cpu.h"
 #include "arch/dtb.h"
 #include "arch/gic.h"
-#include "sys/kio.h"
 #include "arch/memlayout.h"
-#include "arch/smp.h"
-#include "sys/proc.h"
-#include "arch/timer.h"
-#include "sys/types.h"
 #include "arch/pmap.h"
+#include "arch/timer.h"
+#include "sys/kio.h"
+#include "sys/proc.h"
+#include "sys/types.h"
 
 /* PSCI function IDs (SMC Calling Convention, 64-bit) */
-#define PSCI_CPU_ON         0xC4000003UL
+#define PSCI_CPU_ON            0xC4000003UL
 
-#define PSCI_RET_NOT_SUPPORTED      (-1)
+#define PSCI_RET_NOT_SUPPORTED (-1)
 
-#define SMP_ONLINE_SECS     5
-#define SMP_ONLINE_SPINS    500000000UL
+#define SMP_ONLINE_SECS        5
+#define SMP_ONLINE_SPINS       500000000UL
 
 /* Per-CPU state */
 struct cpu cpus[NCPU_MAX];
@@ -47,9 +47,15 @@ static int64 psci_call(uint64 fn, uint64 arg0, uint64 arg1, uint64 arg2)
     register uint64 x3 asm("x3") = arg2;
 
     if (psci_conduit == PSCI_CONDUIT_SMC) {
-        asm volatile("smc #0" : "+r"(x0) : "r"(x1), "r"(x2), "r"(x3) : "memory");
+        asm volatile("smc #0"
+            : "+r"(x0)
+            : "r"(x1), "r"(x2), "r"(x3)
+            : "memory");
     } else if (psci_conduit == PSCI_CONDUIT_HVC) {
-        asm volatile("hvc #0" : "+r"(x0) : "r"(x1), "r"(x2), "r"(x3) : "memory");
+        asm volatile("hvc #0"
+            : "+r"(x0)
+            : "r"(x1), "r"(x2), "r"(x3)
+            : "memory");
     } else {
         return PSCI_RET_NOT_SUPPORTED;
     }
@@ -91,7 +97,8 @@ void smp_init(void)
          * We pass CPU ID as context so mpentry can set
          * tpidr_el1 without reading MPIDR.
          */
-        ret = psci_call(PSCI_CPU_ON, cpu_mpidr[i], KVA_TO_PA((uint64)mpentry), i);
+        ret = psci_call(PSCI_CPU_ON, cpu_mpidr[i], KVA_TO_PA((uint64)mpentry),
+            i);
         if (ret != 0) {
             pr_warn("smp: CPU %d PSCI CPU_ON failed (error %d)\n", i, ret);
             continue;
@@ -117,12 +124,11 @@ void smp_init(void)
             continue;
         }
 
-        dmb();      /* pairs with the dsb_ishst() in mpmain() */
+        dmb(); /* pairs with the dsb_ishst() in mpmain() */
         online++;
     }
     printk("smp: %d of %d CPUs are online\n", online, ncpus);
 }
-
 
 void mpboot(void)
 {

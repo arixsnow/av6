@@ -64,6 +64,7 @@ void main(void)
     scheduler();
 
     /* Halt until interrupted - timer will wake us every 100ms */
-    while (true)
+    while (true) {
         wfi();
+    }
 }

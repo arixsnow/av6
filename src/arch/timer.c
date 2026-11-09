@@ -16,16 +16,16 @@
  *      CNTP_CTL_EL0 - control: bit 0 = enable, bit 1 = mask output
  */
 
+#include "arch/timer.h"
 #include "arch/arm64.h"
 #include "arch/cpu.h"
 #include "arch/dtb.h"
 #include "arch/platform.h"
-#include "arch/timer.h"
 #include "sys/intr.h"
 #include "sys/kio.h"
 #include "sys/types.h"
 
-#define TIMER_HZ    10      /* 10 ticks per second (100ms interval) */
+#define TIMER_HZ 10 /* 10 ticks per second (100ms interval) */
 
 static uint64 timer_interval;
 static uint64 timer_ticks;
@@ -51,8 +51,8 @@ void timer_init(void)
     intr_register(platform.timer_irq, "timer", timer_tick, NULL);
 
     if (cpuid() == 0) {
-        printk("timer: freq=%d Hz, interval=%d ticks (%d Hz)\n",
-            freq, timer_interval, TIMER_HZ);
+        printk("timer: freq=%d Hz, interval=%d ticks (%d Hz)\n", freq,
+            timer_interval, TIMER_HZ);
     }
 }
 
@@ -79,8 +79,9 @@ int timer_tick(void)
      */
     asm volatile("msr cntp_tval_el0, %0" : : "r"(timer_interval));
 
-    if (cpuid() == 0)
+    if (cpuid() == 0) {
         timer_ticks++;
+    }
 
     /*
      * Flag a reschedule rather than yielding here. Yielding mid-hardirq

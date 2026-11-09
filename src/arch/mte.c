@@ -11,8 +11,8 @@
  * it here when userland can opt in.
  */
 
-#include "arch/arm64.h"
 #include "arch/mte.h"
+#include "arch/arm64.h"
 #include "sys/kio.h"
 #include "sys/types.h"
 
@@ -50,7 +50,7 @@ void mte_init(void)
 
     /* SEED[23:8] non-zero. The low Aff0 byte gives per-CPU divergence */
     seed = (((mpidr & 0xff) + 1) & 0xffff) << RGSR_EL1_SEED_SHIFT;
-    seed |= 0x1;        /* TAG[3:0] non-zero starting tag */
+    seed |= 0x1; /* TAG[3:0] non-zero starting tag */
     asm volatile("msr rgsr_el1, %0" : : "r"(seed));
     isb();
 }

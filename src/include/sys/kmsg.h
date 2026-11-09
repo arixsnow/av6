@@ -23,27 +23,27 @@
 /*
  * TEXTSZ is the number to tune. NDESC follows from it
  */
-#define KMSG_TEXTSZ         (64 * 1024)
-#define KMSG_NDESC          1024
-#define KMSG_RECORD_MAX     256
+#define KMSG_TEXTSZ     (64 * 1024)
+#define KMSG_NDESC      1024
+#define KMSG_RECORD_MAX 256
 
-#define KMSG_NO_SEQ         (~0UL)      /* kmsg_add() stored nothing */
-#define KMSG_F_FINAL        0x01        /* no KERN_CONT can extend it */
+#define KMSG_NO_SEQ     (~0UL) /* kmsg_add() stored nothing */
+#define KMSG_F_FINAL    0x01   /* no KERN_CONT can extend it */
 
-#define KMSG_CALLER_CPU     0x80000000U /* no proc: the id is a CPU number */
+#define KMSG_CALLER_CPU 0x80000000U /* no proc: the id is a CPU number */
 
 /*
  * off/len address the text ring, which wraps, so a record's text is not
  * necessarily contiguous. kmsg_read() reassembles it.
  */
 struct kmsg_desc {
-    uint64 seq;             /* monotonic, never reused */
-    uint64 ts;              /* CNTPCT ticks at record time */
-    uint32 off;             /* start of text in the ring */
-    uint32 caller;          /* only this caller may continue the record */
-    uint16 len;             /* <= KMSG_RECORD_MAX */
-    uint8 level;            /* KERN_* */
-    uint8 flags;            /* KMSG_F_* */
+    uint64 seq;    /* monotonic, never reused */
+    uint64 ts;     /* CNTPCT ticks at record time */
+    uint32 off;    /* start of text in the ring */
+    uint32 caller; /* only this caller may continue the record */
+    uint16 len;    /* <= KMSG_RECORD_MAX */
+    uint8 level;   /* KERN_* */
+    uint8 flags;   /* KMSG_F_* */
 };
 
 void kmsg_init(void);
@@ -75,4 +75,4 @@ int kmsg_read(uint64 seq, struct kmsg_desc *out, char *buf);
 uint64 kmsg_first_seq(void);
 uint64 kmsg_next_seq(void);
 
-#endif      /* _AV6_KMSG_H_ */
+#endif /* _AV6_KMSG_H_ */

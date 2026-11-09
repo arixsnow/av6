@@ -38,7 +38,7 @@ void vprintk(int level, const char *format, va_list arglist)
 
 void printk_init(void)
 {
-   kmsg_init();
+    kmsg_init();
 }
 
 void printk_level(int level, const char *format, ...)
@@ -50,7 +50,7 @@ void printk_level(int level, const char *format, ...)
     va_end(arglist);
 }
 
-void printk(const char * format, ...)
+void printk(const char *format, ...)
 {
     va_list arglist;
 

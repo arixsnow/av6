@@ -19,14 +19,14 @@
 
 typedef uint64 bitstr_t;
 
-#define _BITSTR_T_BITS          64
+#define _BITSTR_T_BITS 64
 
 /* number of bitstr_t words required to hold _n bits */
-#define BITSTR_NWORDS(_n)       (((_n) + _BITSTR_T_BITS - 1) / _BITSTR_T_BITS)
+#define BITSTR_NWORDS(_n) (((_n) + _BITSTR_T_BITS - 1) / _BITSTR_T_BITS)
 
 /* word index of bit '_b', and that word's single-bit mask */
-#define _BIT_IDX(_b)            ((_b) / _BITSTR_T_BITS)
-#define _BIT_MASK(_b)           (1UL << ((_b) % _BITSTR_T_BITS))
+#define _BIT_IDX(_b)  ((_b) / _BITSTR_T_BITS)
+#define _BIT_MASK(_b) (1UL << ((_b) % _BITSTR_T_BITS))
 
 /* Declare a bit array */
 #define bit_decl(_name, _nbits) bitstr_t _name[BITSTR_NWORDS(_nbits)]
@@ -62,4 +62,4 @@ static inline void bit_ffc(const bitstr_t *_bitstr, int _nbits, int *_result)
     *_result = -1;
 }
 
-#endif  /* _AV6_BITSTRING_H_ */
+#endif /* _AV6_BITSTRING_H_ */

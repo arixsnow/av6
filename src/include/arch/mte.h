@@ -7,8 +7,8 @@
 #ifndef _AV6_MTE_H_
 #define _AV6_MTE_H_
 
-#include "sys/types.h"
 #include "arch/sysreg.h"
+#include "sys/types.h"
 
 /*
  * MTE - Memory Tagging Extension (ARMv8.5)
@@ -42,14 +42,14 @@
  *      10 = asynchronous (TFSR_EL1 accumulator)
  *      11 = asymmetric (sync, read, async write)
  */
-#define SCTLR_EL1_ITFSB         (1UL << 37)
-#define SCTLR_EL1_TCF0_SHIFT    38
-#define SCTLR_EL1_TCF0_SYNC     (1UL << SCTLR_EL1_TCF0_SHIFT)
-#define SCTLR_EL1_TCF0_MASK     (3UL << SCTLR_EL1_TCF0_SHIFT)
-#define SCTLR_EL1_TCF_SHIFT     40
-#define SCTLR_EL1_TCF_MASK      (3UL << SCTLR_EL1_TCF_SHIFT)
-#define SCTLR_EL1_ATA0          (1UL << 42)
-#define SCTLR_EL1_ATA           (1UL << 43)
+#define SCTLR_EL1_ITFSB      (1UL << 37)
+#define SCTLR_EL1_TCF0_SHIFT 38
+#define SCTLR_EL1_TCF0_SYNC  (1UL << SCTLR_EL1_TCF0_SHIFT)
+#define SCTLR_EL1_TCF0_MASK  (3UL << SCTLR_EL1_TCF0_SHIFT)
+#define SCTLR_EL1_TCF_SHIFT  40
+#define SCTLR_EL1_TCF_MASK   (3UL << SCTLR_EL1_TCF_SHIFT)
+#define SCTLR_EL1_ATA0       (1UL << 42)
+#define SCTLR_EL1_ATA        (1UL << 43)
 
 /*
  * GCR_EL1 (Generation of Random Tags)
@@ -59,8 +59,8 @@
  *
  * RRND[16]: 0 = user RGSR_EL1 LFSR, 1 = TRNG (optional).
  */
-#define GCR_EL1_EXCLUDE_0_F     0x8001UL
-#define GCR_EL1_RRND            (1UL << 16)
+#define GCR_EL1_EXCLUDE_0_F 0x8001UL
+#define GCR_EL1_RRND        (1UL << 16)
 
 /*
  * RGSR_EL1 (Random Allocation Tag Seed)
@@ -71,13 +71,13 @@
  * Each CPU programs a distinct seed so tag streams on different
  * cores are independent.
  */
-#define RGSR_EL1_SEED_SHIFT     8
+#define RGSR_EL1_SEED_SHIFT 8
 
 /*
  * ESR_EL1.ISS.DFSC value for a synchronous tag check fault
  * on a Data Abort (EC == 0x24 or 0x25). Bits [5:0] or ISS.
  */
-#define DFSC_TAG_CHECK          0x11
+#define DFSC_TAG_CHECK 0x11
 
 /*
  * Check for FEAT_MTE2 support.
@@ -169,4 +169,4 @@ static inline void stz2g(void *va)
 
 void mte_init(void);
 
-#endif      /* _AV6_MTE_H_ */
+#endif /* _AV6_MTE_H_ */

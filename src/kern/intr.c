@@ -13,8 +13,8 @@
  * start), then read-only on the dispatch path, so dispatch needs no lock.
  */
 
-#include "arch/gic.h"
 #include "sys/intr.h"
+#include "arch/gic.h"
 #include "sys/kassert.h"
 #include "sys/kio.h"
 #include "sys/proc.h"
@@ -25,12 +25,12 @@
 
 struct intr_src {
     const char *name;
-    int (*filter)(void);        /* hardirq context */
-    void (*handler)(void);      /* ithread context */
-    uint64 count;               /* interrupts dispatched */
-    uint64 stray;               /* dispatched but unhandled */
-    uint32 irq;                 /* INTID, so the ithread can deactivate it */
-    volatile int pending;       /* hardirq -> ithread work handoff */
+    int (*filter)(void);   /* hardirq context */
+    void (*handler)(void); /* ithread context */
+    uint64 count;          /* interrupts dispatched */
+    uint64 stray;          /* dispatched but unhandled */
+    uint32 irq;            /* INTID, so the ithread can deactivate it */
+    volatile int pending;  /* hardirq -> ithread work handoff */
 };
 
 static struct intr_src **intr_srcs;
@@ -76,7 +76,8 @@ void intr_init(void)
 
     intr_srcs = kmalloc(bytes);
     if (intr_srcs == NULL) {
-        panic("intr_init: no room for %u sources (%lu bytes)", intr_nirq, bytes);
+        panic("intr_init: no room for %u sources (%lu bytes)", intr_nirq,
+            bytes);
     }
 
     memset(intr_srcs, 0, bytes);
@@ -85,7 +86,7 @@ void intr_init(void)
 }
 
 void intr_register(uint32 irq, const char *name, int (*filter)(void),
-                    void (*handler)(void))
+    void (*handler)(void))
 {
     int pid;
     struct intr_src *src;
@@ -94,7 +95,8 @@ void intr_register(uint32 irq, const char *name, int (*filter)(void),
         panic("intr_register: irq %u out of range (%u)", irq, intr_nirq);
     }
 
-    KASSERT(intr_srcs[irq] == NULL, "intr_register: irq %d already registered", irq);
+    KASSERT(intr_srcs[irq] == NULL, "intr_register: irq %d already registered",
+        irq);
 
     src = kmalloc(sizeof(*src));
     if (src == NULL) {

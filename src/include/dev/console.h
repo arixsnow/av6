@@ -21,4 +21,4 @@ void console_flush(void);
 void console_flush_upto(uint64 seq);
 void console_replay(void);
 
-#endif  /* _AV6_CONSOLE_H_ */
+#endif /* _AV6_CONSOLE_H_ */

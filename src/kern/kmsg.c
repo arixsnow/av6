@@ -17,11 +17,11 @@
  * "overwritten" from "nothing new".
  */
 
+#include "sys/kmsg.h"
 #include "arch/arm64.h"
 #include "arch/cpu.h"
 #include "dev/uart.h"
 #include "sys/kio.h"
-#include "sys/kmsg.h"
 #include "sys/proc.h"
 #include "sys/spinlock.h"
 #include "sys/types.h"
@@ -31,11 +31,11 @@ static struct spinlock kmsg_lock;
 static struct kmsg_desc desc[KMSG_NDESC];
 static char textbuf[KMSG_TEXTSZ];
 
-static uint32 dhead;        /* next descriptor to fill */
-static uint32 dtail;        /* oldest live descriptor */
-static uint32 ndesc;        /* live descriptors, dhead == dtail is ambiguous */
-static uint32 thead;        /* next free byte */
-static uint32 ttail;        /* oldest live byte */
+static uint32 dhead; /* next descriptor to fill */
+static uint32 dtail; /* oldest live descriptor */
+static uint32 ndesc; /* live descriptors, dhead == dtail is ambiguous */
+static uint32 thead; /* next free byte */
+static uint32 ttail; /* oldest live byte */
 static uint32 tused;
 static uint64 next_seq;
 
@@ -82,7 +82,8 @@ static uint32 kmsg_caller(struct cpu *c)
  * fit, or is already closed, in which case the caller starts a fresh record
  * rather than truncating mid-line. Caller holds kmsg_lock.
  */
-static struct kmsg_desc *kmsg_append_last(uint32 caller, const char *text, uint16 len)
+static struct kmsg_desc *kmsg_append_last(uint32 caller, const char *text,
+    uint16 len)
 {
     struct kmsg_desc *d;
 
@@ -148,7 +149,8 @@ uint64 kmsg_add(int level, const char *text, uint16 len)
     c->in_kmsg = 1;
     acquire_spinlock(&kmsg_lock);
 
-    if (level == KERN_CONT && (d = kmsg_append_last(caller, text, len)) != NULL) {
+    if (level == KERN_CONT
+        && (d = kmsg_append_last(caller, text, len)) != NULL) {
         seq = d->seq;
         goto done;
     }

@@ -17,14 +17,14 @@
  *      gic_inithart()  - all CPUs, sets up per-CPU GICR + ICC
  */
 
-#include "arch/arm64.h"
-#include "sys/types.h"
-#include "arch/mmio.h"
-#include "arch/memlayout.h"
-#include "arch/platform.h"
-#include "arch/dtb.h"
 #include "arch/gic.h"
+#include "arch/arm64.h"
+#include "arch/dtb.h"
+#include "arch/memlayout.h"
+#include "arch/mmio.h"
+#include "arch/platform.h"
 #include "sys/kio.h"
+#include "sys/types.h"
 
 /* GICD (Distributor) - one per system */
 #define GICD_CTLR               0x000
@@ -43,13 +43,13 @@
 #define GICD_CTLR_ARE_NS        (1U << 4)
 #define GICD_CTLR_RWP           (1U << 31)
 
-#define GICD_TYPER_ITLINES_MASK     0x1fU
+#define GICD_TYPER_ITLINES_MASK 0x1fU
 
 /* One second or a spin count if CNTFRQ_EL0 reads 0 */
-#define GIC_RWP_SPINS               100000000UL
+#define GIC_RWP_SPINS            100000000UL
 
-#define GICD_PIDR2_ARCHREV_SHIFT    4
-#define GICD_PIDR2_ARCHREV_MASK     0xF
+#define GICD_PIDR2_ARCHREV_SHIFT 4
+#define GICD_PIDR2_ARCHREV_MASK  0xF
 
 /*
  * GICR (Redistributor) - one per CPU
@@ -59,25 +59,24 @@
  * if the GIC adds a VLPI frame discovered from GICR_TYPER.VLPIS
  * in gic_init().
  */
-#define GICR_FRAME_SIZE         0x20000
-#define GICR_FRAME_SIZE_VLPI    0x40000
+#define GICR_FRAME_SIZE        0x20000
+#define GICR_FRAME_SIZE_VLPI   0x40000
 
-#define GICR_TYPER_OFF          0x008
-#define GICR_TYPER_VLPIS        (1UL << 1)
-#define GICR_TYPER_LAST         (1UL <<4)
+#define GICR_TYPER_OFF         0x008
+#define GICR_TYPER_VLPIS       (1UL << 1)
+#define GICR_TYPER_LAST        (1UL << 4)
 
-#define GICR_WAKER_OFF          0x014
-#define GICR_SGI_OFF            0x10000
-#define GICR_IGROUPR0_OFF       (GICR_SGI_OFF + 0x080)
-#define GICR_ISENABLER0_OFF     (GICR_SGI_OFF + 0x100)
-#define GICR_ICENABLER0_OFF     (GICR_SGI_OFF + 0x180)
-#define GICR_IPRIORITYR_OFF(N)  (GICR_SGI_OFF + 0x400 + 4 * (N))
+#define GICR_WAKER_OFF         0x014
+#define GICR_SGI_OFF           0x10000
+#define GICR_IGROUPR0_OFF      (GICR_SGI_OFF + 0x080)
+#define GICR_ISENABLER0_OFF    (GICR_SGI_OFF + 0x100)
+#define GICR_ICENABLER0_OFF    (GICR_SGI_OFF + 0x180)
+#define GICR_IPRIORITYR_OFF(N) (GICR_SGI_OFF + 0x400 + 4 * (N))
 
+#define GICR_WAKER_PSLEEP      (1U << 1)
+#define GICR_WAKER_CASLEEP     (1U << 2)
 
-#define GICR_WAKER_PSLEEP       (1U << 1)
-#define GICR_WAKER_CASLEEP      (1U << 2)
-
-#define ICC_CTLR_EOIMODE        (1U << 1)
+#define ICC_CTLR_EOIMODE       (1U << 1)
 
 static uintptr gicd;
 static uint32 gic_nirq;
@@ -111,7 +110,7 @@ static inline uint32 icc_read_iar1(void)
 
     asm volatile("mrs %0, s3_0_c12_c12_0" : "=r"(val));
 
-    return (uint32) val;
+    return (uint32)val;
 }
 
 static inline void icc_write_eoir1(uint32 val)
@@ -196,10 +195,8 @@ static void gic_wait_rwp(void)
  */
 static uint64 mpidr_to_affinity(uint64 mpidr)
 {
-    return ((mpidr >> 32) & 0xff) << 24
-        | ((mpidr >> 16) & 0xff) << 16
-        | ((mpidr >> 8) & 0xff) << 8
-        | (mpidr & 0xff);
+    return ((mpidr >> 32) & 0xff) << 24 | ((mpidr >> 16) & 0xff) << 16
+        | ((mpidr >> 8) & 0xff) << 8 | (mpidr & 0xff);
 }
 
 /* Find this CPU's redistributor */
@@ -225,7 +222,7 @@ static uintptr gicr_find(void)
 
     panic("gic: no redistributor frame for this CPU");
 
-    return 0;       /* unreachable */
+    return 0; /* unreachable */
 }
 
 uint32 gic_nirqs(void)
@@ -301,8 +298,6 @@ void gic_irq_set_affinity(uint32 irq, uint64 aff)
     gicd_write64(GICD_IROUTER(irq), aff);
 }
 
-
-
 /*
  * gic_init - global distributor setup (BSP only, called once)
  *
@@ -350,8 +345,8 @@ void gic_init(void)
     gic_wait_rwp();
 
     /* Enable then wait */
-    gicd_write32(GICD_CTLR, GICD_CTLR_ARE_NS | GICD_CTLR_EN_GRP1NS
-        | GICD_CTLR_EN_GRP1A);
+    gicd_write32(GICD_CTLR,
+        GICD_CTLR_ARE_NS | GICD_CTLR_EN_GRP1NS | GICD_CTLR_EN_GRP1A);
     gic_wait_rwp();
 
     for (i = GIC_SPI_BASE; i < gic_nirq; i++) {
@@ -424,7 +419,6 @@ void gic_inithart(void)
     gic_irq_enable(IRQ_PANIC);
 
     printk("gic: cpu%d redistributor initialized\n", cpuid());
-
 }
 
 uint32 gic_acknwlg(void)

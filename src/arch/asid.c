@@ -30,22 +30,22 @@
  * TLB entries are harmless and cleared by the deferred local flush.
  */
 
-#include "arch/arm64.h"
 #include "arch/asid.h"
-#include "sys/bitstring.h"
+#include "arch/arm64.h"
 #include "arch/cpu.h"
-#include "sys/cpumask.h"
 #include "arch/dtb.h"
+#include "arch/pmap.h"
+#include "sys/bitstring.h"
+#include "sys/cpumask.h"
+#include "sys/kassert.h"
 #include "sys/kio.h"
 #include "sys/proc.h"
 #include "sys/spinlock.h"
 #include "sys/string.h"
 #include "sys/types.h"
-#include "arch/pmap.h"
-#include "sys/kassert.h"
 
-#define ASID_MAX_BITS       16
-#define ASID_MAX            (1u << ASID_MAX_BITS)
+#define ASID_MAX_BITS 16
+#define ASID_MAX      (1u << ASID_MAX_BITS)
 
 static struct spinlock asid_lock;
 static uint64 asid_num_total;           /* 256 or 65536 */
@@ -53,7 +53,7 @@ static uint64 asid_mask;                /* asid_num_total - 1 */
 static uint64 asid_generation;          /* counts in units of asid_num_total */
 static uint64 asid_next;                /* round-robin hint */
 static bit_decl(asid_bitmap, ASID_MAX); /* 1024 uint64 words */
-static struct cpumask tlb_pending;      /* set of CPUs owing a local TLB flush */
+static struct cpumask tlb_pending; /* set of CPUs owing a local TLB flush */
 
 /* Helpers (all called under asid_lock) */
 
@@ -183,7 +183,8 @@ static void flush_context(void)
         cpumask_set(&tlb_pending, c);
     }
 
-    atomic64_set(&asid_generation, atomic64_read(&asid_generation) + asid_num_total);
+    atomic64_set(&asid_generation,
+        atomic64_read(&asid_generation) + asid_num_total);
     asid_next = 1;
 }
 
@@ -270,8 +271,8 @@ void asid_switch(struct proc *p)
      */
     if (old_active != 0
         && ((ctx ^ gen) & ~asid_mask) == 0
-        && atomic64_cmpxchg_relaxed(&cpus[cpu].asid_active,
-            old_active, ctx) == old_active) {
+        && atomic64_cmpxchg_relaxed(&cpus[cpu].asid_active, old_active, ctx)
+            == old_active) {
         goto fast_path;
     }
 

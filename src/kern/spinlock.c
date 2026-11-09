@@ -4,11 +4,11 @@
  * can be found in the LICENSE file.
  */
 
+#include "sys/spinlock.h"
 #include "arch/arm64.h"
 #include "arch/cpu.h"
 #include "sys/kassert.h"
 #include "sys/kio.h"
-#include "sys/spinlock.h"
 #include "sys/types.h"
 
 void push_off_at(const char *file, int line)
@@ -24,7 +24,7 @@ void push_off_at(const char *file, int line)
     irq_disable();
     c = &cpus[cpuid()];
     if (c->noff == 0) {
-        c->intena = old;        /* save original IRQ state */
+        c->intena = old; /* save original IRQ state */
         c->off_file = file;
         c->off_line = line;
     }
@@ -90,7 +90,7 @@ void release_spinlock_at(struct spinlock *lk, const char *file, int line)
      * Ensures all writes protected by this lock are visible
      * to other cores BEFORE the lock appears free.
      */
-    asm volatile("stlr %w0, [%1]" : : "r" (0), "r" (&lk->locked) : "memory");
+    asm volatile("stlr %w0, [%1]" : : "r"(0), "r"(&lk->locked) : "memory");
 
     pop_off_at(file, line);
 }

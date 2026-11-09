@@ -11,9 +11,9 @@
  * echo, and input buffering. Output goes straight to uart_putc.
  */
 
+#include "dev/console.h"
 #include "arch/arm64.h"
 #include "arch/platform.h"
-#include "dev/console.h"
 #include "dev/uart.h"
 #include "sys/fmt.h"
 #include "sys/intr.h"
@@ -32,10 +32,10 @@
  * from the 1960s. The terminal literally clears bit 6, that's what the CTRL
  * key does electrically. 'A' is 0100 0001, clear bit 6 -> 0000 0001
  */
-#define CTRL(x)         ((x) - '@')
+#define CTRL(x)           ((x) - '@')
 
-#define INPUT_BUF_SIZE          128
-#define CONSOLE_DRAIN_MAX       256
+#define INPUT_BUF_SIZE    128
+#define CONSOLE_DRAIN_MAX 256
 
 /* Receive faults, by cause. Caller holds cons_lock */
 static struct {
@@ -45,15 +45,15 @@ static struct {
     uint64 frame;
 } cons_rx_err;
 
-static struct spinlock cons_lock;           /* input ring */
-static struct spinlock cons_out_lock;       /* the port, and cons_seq */
-static uint64 cons_seq;                     /* next record to render: cons_out_lock */
+static struct spinlock cons_lock;     /* input ring */
+static struct spinlock cons_out_lock; /* the port, and cons_seq */
+static uint64 cons_seq;               /* next record to render: cons_out_lock */
 
 static struct {
     char buf[INPUT_BUF_SIZE];
-    uint64 r;       /* read index */
-    uint64 w;       /* write index (committed lines) */
-    uint64 e;       /* edit index (current typing position) */
+    uint64 r; /* read index */
+    uint64 w; /* write index (committed lines) */
+    uint64 e; /* edit index (current typing position) */
 } cons;
 
 void console_write(const char *buf, uint64 n)
@@ -104,8 +104,8 @@ static void console_render(const struct kmsg_desc *d, const char *text)
 
     f = read_cntfrq();
     if (f != 0) {
-        snprintf(hdr, sizeof(hdr), "[%5lu.%06lu] ",
-            d->ts / f, ((d->ts % f) * USEC_PER_SEC) / f);
+        snprintf(hdr, sizeof(hdr), "[%5lu.%06lu] ", d->ts / f,
+            ((d->ts % f) * USEC_PER_SEC) / f);
         console_puts(hdr);
     }
 
@@ -224,7 +224,6 @@ void console_config(void)
     intr_register(platform.uart_irq, "uart", console_filter, console_intr);
 }
 
-
 uint32 console_rx_error(uint32 dr)
 {
     if (dr & UART_DR_BE) {
@@ -329,7 +328,8 @@ void console_intr(void)
 
                     cons.buf[cons.e++ % INPUT_BUF_SIZE] = c;
 
-                    if (c == '\n' || c == CTRL('D')
+                    if (c == '\n'
+                        || c == CTRL('D')
                         || cons.e - cons.r == INPUT_BUF_SIZE) {
                         /* Complete line ready. Advance write index. */
                         cons.w = cons.e;

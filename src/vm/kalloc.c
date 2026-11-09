@@ -19,7 +19,7 @@
  * reached through the DMAP.
  */
 
-
+#include "vm/kalloc.h"
 #include "arch/memlayout.h"
 #include "arch/mmu.h"
 #include "arch/pmap.h"
@@ -27,17 +27,16 @@
 #include "sys/kio.h"
 #include "sys/spinlock.h"
 #include "sys/types.h"
-#include "vm/kalloc.h"
 #include "vm/kmem.h"
 #include "vm/physmem.h"
 
 extern char end[];
 
 /* Page flags */
-#define PG_UNUSED       0       /* not on any list */
-#define PG_FREE         1       /* on freelist, available */
-#define PG_USED         2       /* allocated, in use */
-#define PG_SLAB         3       /* allocated, carved into objects by the slab */
+#define PG_UNUSED 0 /* not on any list */
+#define PG_FREE   1 /* on freelist, available */
+#define PG_USED   2 /* allocated, in use */
+#define PG_SLAB   3 /* allocated, carved into objects by the slab */
 
 /*
  * Physical page descriptor. .next links free page, .flags and .refcnt are
@@ -45,13 +44,13 @@ extern char end[];
  * segment, which costs a short scan and saves 8 bytes per page.
  */
 struct page {
-    struct page *next;          /* freelist link (valid when PG_FREE) */
-    uint32 flags;               /* PG_UNUSED / PG_FREE / PG_USED */
-    int32 refcnt;               /* reference count (COW fork) */
+    struct page *next; /* freelist link (valid when PG_FREE) */
+    uint32 flags;      /* PG_UNUSED / PG_FREE / PG_USED */
+    int32 refcnt;      /* reference count (COW fork) */
 };
 
-static struct page *pages;      /* descriptor array, carved from RAM */
-static uint64 npages;           /* descriptors allocated */
+static struct page *pages; /* descriptor array, carved from RAM */
+static uint64 npages;      /* descriptors allocated */
 
 static struct {
     struct spinlock lock;
@@ -161,7 +160,8 @@ void kinit(void)
      * RAM above the kernel image, never part of .bss.
      */
     for (i = 0; i < vm_phys_nsegs; i++) {
-        for (pa = vm_phys_segs[i].start; pa < vm_phys_segs[i].end; pa += PGSIZE) {
+        for (pa = vm_phys_segs[i].start; pa < vm_phys_segs[i].end;
+            pa += PGSIZE) {
             pg = pa_to_page(pa);
             pg->flags = PG_FREE;
             pg->refcnt = 0;

@@ -43,30 +43,29 @@ void trap_fiq(struct trapframe *tf, uint64 esr, uint64 far);
  *      IABT: EL0 = 0x20, EL1 = 0x21
  *      DABT: EL0 = 0x24, EL1 = 0x25
  */
-#define EC_UNKNOWN          0x00        /* Unknown reason */
-#define EC_SVC64            0x15        /* SVC (system call) from AArch64 */
-#define EC_IABT_EL0         0x20        /* Instruction abort, lower EL */
-#define EC_IABT_EL1         0x21        /* Instruction abort, same EL */
-#define EC_DABT_EL0         0x24        /* Data abort, lower EL */
-#define EC_DABT_EL1         0x25        /* Data abort, same EL */
-#define EC_SERROR           0x2F        /* SError interrupt */
+#define EC_UNKNOWN  0x00 /* Unknown reason */
+#define EC_SVC64    0x15 /* SVC (system call) from AArch64 */
+#define EC_IABT_EL0 0x20 /* Instruction abort, lower EL */
+#define EC_IABT_EL1 0x21 /* Instruction abort, same EL */
+#define EC_DABT_EL0 0x24 /* Data abort, lower EL */
+#define EC_DABT_EL1 0x25 /* Data abort, same EL */
+#define EC_SERROR   0x2F /* SError interrupt */
 
 /* ESR_EL1 field extraction */
-#define ESR_EC_SHIFT            26
-#define ESR_EC_MASK             GENMASK(5, 0)   /* EC : ESR[31:26] */
-#define ESR_ISS_MASK            GENMASK(24, 0)  /* ISS : ESR[24: 0] */
-#define ESR_ISS_DFSC_MASK       GENMASK(5, 0)   /* DFSC : ISS[5:0] */
+#define ESR_EC_SHIFT      26
+#define ESR_EC_MASK       GENMASK(5, 0)  /* EC : ESR[31:26] */
+#define ESR_ISS_MASK      GENMASK(24, 0) /* ISS : ESR[24: 0] */
+#define ESR_ISS_DFSC_MASK GENMASK(5, 0)  /* DFSC : ISS[5:0] */
 
 /* SError syndrome */
-#define ESR_IDS                 BIT(24)
-#define ESR_AET_SHIFT           10
-#define ESR_AET_MASK            GENMASK(2, 0)   /* AET : ESR[12:10] */
-#define ESR_AET_UC              0x0             /* uncontainable */
-#define ESR_AET_UEU             0x1             /* uncorrected, unrecoverable */
-#define ESR_AET_UEO             0x2             /* restartable, not yet consumed */
-#define ESR_AET_UER             0x3             /* uncorrected, recoverable */
-#define ESR_AET_CE              0x6             /* corrected */
-
+#define ESR_IDS       BIT(24)
+#define ESR_AET_SHIFT 10
+#define ESR_AET_MASK  GENMASK(2, 0) /* AET : ESR[12:10] */
+#define ESR_AET_UC    0x0           /* uncontainable */
+#define ESR_AET_UEU   0x1           /* uncorrected, unrecoverable */
+#define ESR_AET_UEO   0x2           /* restartable, not yet consumed */
+#define ESR_AET_UER   0x3           /* uncorrected, recoverable */
+#define ESR_AET_CE    0x6           /* corrected */
 
 /*
  * Per-CPU emergency stack for the kernel-stack-overflow handler
@@ -87,8 +86,8 @@ char overflow_stack[NCPU_MAX][OVERFLOW_STACK_SIZE] __attribute__((aligned(16)));
  */
 void trap_sync(struct trapframe *tf, uint64 esr, uint64 far)
 {
-    uint32 ec = (esr >> ESR_EC_SHIFT) & ESR_EC_MASK;        /* Exception Class */
-    uint32 iss = esr & ESR_ISS_MASK;                        /* Instruction Specific Syndrome */
+    uint32 ec = (esr >> ESR_EC_SHIFT) & ESR_EC_MASK; /* Exception Class */
+    uint32 iss = esr & ESR_ISS_MASK; /* Instruction Specific Syndrome */
     struct proc *p;
 
     switch (ec) {
@@ -100,17 +99,20 @@ void trap_sync(struct trapframe *tf, uint64 esr, uint64 far)
                 return;
             }
 
-            printk("Data Abort at ELR=%p, FAR=%p, ISS=%#x\n", tf->elr, far, iss);
+            printk("Data Abort at ELR=%p, FAR=%p, ISS=%#x\n", tf->elr, far,
+                iss);
             panic("data abort");
             break;
 
         case EC_IABT_EL1:
-            printk("Instruction Abort at ELR=%p, FAR=%p, ISS=%#x\n", tf->elr, far, iss);
+            printk("Instruction Abort at ELR=%p, FAR=%p, ISS=%#x\n", tf->elr,
+                far, iss);
             panic("instruction abort");
             break;
 
         case EC_SVC64:
-            printk("SVC from Kernel (unexpected), ESR=%p, ELR=%p\n", esr, tf->elr);
+            printk("SVC from Kernel (unexpected), ESR=%p, ELR=%p\n", esr,
+                tf->elr);
             panic("unexpected svc");
             break;
 
@@ -139,8 +141,9 @@ void trap_irq(void)
     int res;
     uint32 irq = gic_acknwlg();
 
-    if (irq == GIC_SPURIOUS)
+    if (irq == GIC_SPURIOUS) {
         return;
+    }
 
     if (irq == IRQ_PANIC) {
         gic_eoi(irq);
@@ -295,8 +298,8 @@ void handle_stack_overflow(uint64 sp)
     asm volatile("mrs %0, far_el1" : "=r"(far));
 
     printk("\n=== KERNEL STACK OVERFLOW ===\n");
-    printk("cpu %d, pid %d (%s)\n",
-        (int)cpuid(), p ? p->pid : -1, p ? p->name : "<none>");
+    printk("cpu %d, pid %d (%s)\n", (int)cpuid(), p ? p->pid : -1,
+        p ? p->name : "<none>");
     printk("    kernel SP = %p (overflowed into the guard)\n", sp);
     printk("    ELR = %p ESR = %p FAR = %p\n", elr, esr, far);
     panic("kernel stack overflow");
@@ -325,7 +328,8 @@ static int serror_is_fatal(uint64 esr)
 void trap_serror(struct trapframe *tf, uint64 esr, uint64 far)
 {
     KASSERT(((esr >> ESR_EC_SHIFT) & ESR_EC_MASK) == EC_SERROR,
-        "trap_serror: EC %#lx is not SError", (esr >> ESR_EC_SHIFT) & ESR_EC_MASK);
+        "trap_serror: EC %#lx is not SError",
+        (esr >> ESR_EC_SHIFT) & ESR_EC_MASK);
 
     if (!serror_is_fatal(esr)) {
         return;

@@ -33,7 +33,7 @@ static void kwarn_returns_condition(struct ktest *t)
     if (KWARN(1 == 0)) {
         taken = 1;
     }
-    KTEST_EXPECT_EQ(t, taken , 0);
+    KTEST_EXPECT_EQ(t, taken, 0);
 }
 KTEST_CASE(kwarn_returns_condition);
 

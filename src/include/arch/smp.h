@@ -10,4 +10,4 @@
 void smp_init(void);
 void mpmain(void);
 
-#endif  /* _AV6_SMP_H_ */
+#endif /* _AV6_SMP_H_ */

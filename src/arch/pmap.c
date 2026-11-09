@@ -18,13 +18,13 @@
  * can hold entries from multiple processes without flushing
  */
 
+#include "arch/pmap.h"
 #include "arch/arm64.h"
 #include "arch/asid.h"
 #include "arch/memlayout.h"
 #include "arch/mmu.h"
 #include "arch/mte.h"
 #include "arch/pan.h"
-#include "arch/pmap.h"
 #include "sys/bitstring.h"
 #include "sys/kassert.h"
 #include "sys/kio.h"
@@ -106,7 +106,7 @@ static void dmap_page(uint64 pa)
         l2[L2X(pa)] = (pte_t)l3 | PTE_VALID | PTE_TABLE;
     }
     l3 = (pte_t *)PTE_ADDR(l2[L2X(pa)]);
-    l3[L3X(pa)] = pa | PAGE_KERNEL;         /* non-exec: head/tail RAM is never text */
+    l3[L3X(pa)] = pa | PAGE_KERNEL; /* non-exec: head/tail RAM is never text */
 }
 
 static void dmap_block_2m(uint64 pa)
@@ -222,10 +222,12 @@ static const uint16 parange_bits[] = {32, 36, 40, 42, 44, 48, 52, 56};
 
 static uint64 pa_range(void)
 {
-    uint64 parange = SYS_FIELD(read_sysreg(id_aa64mmfr0_el1), ID_AA64MMFR0_PARANGE);
+    uint64 parange = SYS_FIELD(read_sysreg(id_aa64mmfr0_el1),
+        ID_AA64MMFR0_PARANGE);
 
     /* av6 walks 48-bit tables; a wider PARange would change PTE bits [51:48] */
-    return (parange > ID_AA64MMFR0_PARANGE_48) ? ID_AA64MMFR0_PARANGE_48 : parange;
+    return (parange > ID_AA64MMFR0_PARANGE_48) ? ID_AA64MMFR0_PARANGE_48
+                                               : parange;
 }
 
 static int has_hafdbs(void)
@@ -269,9 +271,9 @@ void kvminithart(void)
      * TBI0 = top byte ignore (required for MTE tagged pointers)
      */
     tcr = TCR_T0SZ(48) | TCR_TG0_4KB | TCR_IRGN0_WB_WA | TCR_ORGN0_WB_WA
-            | TCR_SH0_INNER | TCR_IPS(pa_range()) | TCR_TBI0 | TCR_TBI1
-            | TCR_T1SZ(48) | TCR_TG1_4KB | TCR_IRGN1_WB_WA | TCR_ORGN1_WB_WA
-            | TCR_SH1_INNER;
+        | TCR_SH0_INNER | TCR_IPS(pa_range()) | TCR_TBI0 | TCR_TBI1
+        | TCR_T1SZ(48) | TCR_TG1_4KB | TCR_IRGN1_WB_WA | TCR_ORGN1_WB_WA
+        | TCR_SH1_INNER;
 
     if (asid_bits() == 16) {
         tcr |= TCR_AS;
@@ -309,7 +311,7 @@ void kvminithart(void)
     asm volatile("mrs %0, sctlr_el1" : "=r"(sctlr));
 
     sctlr = SCTLR_EL1_BASE | SCTLR_EL1_M | SCTLR_EL1_C | SCTLR_EL1_I
-            | SCTLR_EL1_SA | SCTLR_EL1_SA0;
+        | SCTLR_EL1_SA | SCTLR_EL1_SA0;
     asm volatile("msr sctlr_el1, %0" : : "r"(sctlr));
 
     /* Flush pipeline: CPU must re-fetch with MMU active */
@@ -375,8 +377,7 @@ static pte_t *kstack_walk(uint64 va, int alloc)
 /* kstack_base_va - VA of slot's lowest stack page, just above the guard. */
 static uint64 kstack_base_va(int idx)
 {
-    return KSTACK_WINDOW
-        + (uint64)idx * KSTACK_SLOT_PAGES * PGSIZE
+    return KSTACK_WINDOW + (uint64)idx * KSTACK_SLOT_PAGES * PGSIZE
         + (uint64)KSTACK_GUARD_PAGES * PGSIZE;
 }
 
@@ -395,7 +396,8 @@ uint64 kstack_alloc(int idx)
     pte_t *pte;
 
     KASSERT(idx >= 0
-        && (uint64)(idx + 1) * KSTACK_SLOT_PAGES * PGSIZE <= KSTACK_WINDOW_SIZE,
+            && (uint64)(idx + 1) * KSTACK_SLOT_PAGES * PGSIZE
+                <= KSTACK_WINDOW_SIZE,
         "kstack_alloc: slot %d outside the kstack window", idx);
 
     base_va = kstack_base_va(idx);
@@ -750,7 +752,8 @@ uint64 uvmalloc(pte_t *pagetable, uint64 oldsz, uint64 newsz)
  *      table is a valid pagetable page at the given level
  *      PTE_VALID set on every internal-pointer entry
  */
-static void uvmunmap_range(pte_t *table, int level, uintptr va_start, uintptr va_end)
+static void uvmunmap_range(pte_t *table, int level, uintptr va_start,
+    uintptr va_end)
 {
     int shift, idx, j;
     uintptr va, next_va, sub_start, sub_end;

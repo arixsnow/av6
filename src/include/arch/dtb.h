@@ -9,8 +9,8 @@
 
 #include "sys/cpumask.h"
 #include "sys/fdt.h"
-#include "sys/types.h"
 #include "sys/param.h"
+#include "sys/types.h"
 
 extern int ncpus;
 
@@ -46,4 +46,4 @@ int dtb_cpu_uses_psci(const struct fdt *fdt, const struct fdt_node *cpu);
 int dtb_cpu_mpidr(const struct fdt *fdt, const struct fdt_node *cpu, uint32 ac,
     uint64 *mpidr);
 
-#endif  /* _AV6_DTB_H_ */
+#endif /* _AV6_DTB_H_ */

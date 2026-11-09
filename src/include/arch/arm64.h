@@ -7,16 +7,16 @@
 #ifndef _AV6_ARM64_H_
 #define _AV6_ARM64_H_
 
-#include "sys/types.h"
 #include "sys/bitops.h"
+#include "sys/types.h"
 
 /* MPIDR_EL1 affinity: Aff3[39:32] | Aff2[23:16] | Aff1[15:8] | Aff0[7:0] */
-#define MPIDR_AFF_MASK          0xFF00FFFFFFUL
+#define MPIDR_AFF_MASK     0xFF00FFFFFFUL
 
-#define DAIF_I                  BIT(7)
-#define CTR_IMINLINE_SHIFT      0
-#define CTR_DMINLINE_SHIFT      16
-#define CTR_MINLINE_MASK        GENMASK(3, 0)
+#define DAIF_I             BIT(7)
+#define CTR_IMINLINE_SHIFT 0
+#define CTR_DMINLINE_SHIFT 16
+#define CTR_MINLINE_MASK   GENMASK(3, 0)
 
 /*
  * Interrupt Control:
@@ -72,14 +72,12 @@ static inline uint atomic_swap(volatile uint *addr, uint newval)
 {
     uint oldval, status;
 
-    asm volatile(
-        "1: ldaxr   %w0, [%2]       \n"
-        "   stlxr   %w1, %w3, [%2]  \n"
-        "   cbnz    %w1, 1b         \n"
-        : "=&r" (oldval), "=&r" (status)
-        : "r" (addr), "r" (newval)
-        : "memory"
-    );
+    asm volatile("1: ldaxr   %w0, [%2]       \n"
+                 "   stlxr   %w1, %w3, [%2]  \n"
+                 "   cbnz    %w1, 1b         \n"
+        : "=&r"(oldval), "=&r"(status)
+        : "r"(addr), "r"(newval)
+        : "memory");
 
     return oldval;
 }
@@ -110,35 +108,31 @@ static inline uint64 atomic64_xchg_relaxed(volatile uint64 *p, uint64 newval)
     uint64 oldval;
     uint status;
 
-    asm volatile(
-        "1: ldxr    %0, [%2]\n"
-        "   stxr    %w1, %3, [%2]\n"
-        "   cbnz    %w1, 1b\n"
-        : "=&r" (oldval), "=&r" (status)
-        : "r" (p), "r" (newval)
-        : "memory"
-    );
+    asm volatile("1: ldxr    %0, [%2]\n"
+                 "   stxr    %w1, %3, [%2]\n"
+                 "   cbnz    %w1, 1b\n"
+        : "=&r"(oldval), "=&r"(status)
+        : "r"(p), "r"(newval)
+        : "memory");
 
     return oldval;
 }
 
-static inline uint64 atomic64_cmpxchg_relaxed(volatile uint64 *p,
-        uint64 expect, uint64 newval)
+static inline uint64 atomic64_cmpxchg_relaxed(volatile uint64 *p, uint64 expect,
+    uint64 newval)
 {
     uint64 oldval;
     uint status;
 
-    asm volatile(
-        "1: ldxr    %0, [%2]\n"
-        "   cmp     %0, %3\n"
-        "   b.ne    2f\n"
-        "   stxr    %w1, %4, [%2]\n"
-        "   cbnz    %w1, 1b\n"
-        "2:\n"
-        : "=&r" (oldval), "=&r" (status)
-        : "r" (p), "r" (expect), "r" (newval)
-        : "memory", "cc"
-    );
+    asm volatile("1: ldxr    %0, [%2]\n"
+                 "   cmp     %0, %3\n"
+                 "   b.ne    2f\n"
+                 "   stxr    %w1, %4, [%2]\n"
+                 "   cbnz    %w1, 1b\n"
+                 "2:\n"
+        : "=&r"(oldval), "=&r"(status)
+        : "r"(p), "r"(expect), "r"(newval)
+        : "memory", "cc");
 
     return oldval;
 }
@@ -209,17 +203,17 @@ static inline void wfi(void)
  */
 static inline void tlbi_vmalle1(void)
 {
-    dsb_ishst();                                /* publish PTE writes first */
+    dsb_ishst(); /* publish PTE writes first */
     asm volatile("tlbi vmalle1" ::: "memory");
-    asm volatile("dsb nsh" ::: "memory");       /* local scope: non-sharable */
+    asm volatile("dsb nsh" ::: "memory"); /* local scope: non-sharable */
     isb();
 }
 
 static inline void tlbi_aside1is(uint64 asid)
 {
-    dsb_ishst();                                /* publish PTE writes first */
+    dsb_ishst(); /* publish PTE writes first */
     asm volatile("tlbi aside1is, %0" : : "r"(asid << 48) : "memory");
-    dsb_ish();                                  /* wait for the broadcast */
+    dsb_ish(); /* wait for the broadcast */
     isb();
 }
 
@@ -234,7 +228,7 @@ static inline void tlbi_vaae1is_range(uint64 va, uint64 npages)
     for (i = 0; i < npages; i++) {
         asm volatile("tlbi vaae1is, %0" : : "r"(page + i) : "memory");
     }
-    dsb_ish();                                  /* wait for the broadcast */
+    dsb_ish(); /* wait for the broadcast */
     isb();
 }
 
@@ -242,7 +236,7 @@ static inline uint64 read_mpidr(void)
 {
     uint64 val;
     asm volatile("mrs %0, mpidr_el1" : "=r"(val));
-    return val & MPIDR_AFF_MASK;      /* affinity only, strips RES1/U/MT flags */
+    return val & MPIDR_AFF_MASK; /* affinity only, strips RES1/U/MT flags */
 }
 
 /* Generic timer : free-running physical counter and its frequency (Hz). */
@@ -277,7 +271,7 @@ static inline int irq_get(void)
     uint64 daif;
 
     asm volatile("mrs %0, daif" : "=r"(daif));
-    return (daif & DAIF_I) == 0;      /* I clear = unmasked = enable */
+    return (daif & DAIF_I) == 0; /* I clear = unmasked = enable */
 }
 
 /*
@@ -302,4 +296,4 @@ static inline uint64 cacheline_size(void)
     return (dline < iline) ? dline : iline;
 }
 
-#endif      /* _AV6_ARM64_H_ */
+#endif /* _AV6_ARM64_H_ */

@@ -11,15 +11,15 @@
 #include "tests/ktest.h"
 
 /* Define here rather than shared, so a wrong value in the reader shows up. */
-#define FDT_MAGIC           0xD00DFEED
-#define FDT_BEGIN_NODE      1
-#define FDT_END_NODE        2
-#define FDT_PROP            3
-#define FDT_END             9
+#define FDT_MAGIC      0xD00DFEED
+#define FDT_BEGIN_NODE 1
+#define FDT_END_NODE   2
+#define FDT_PROP       3
+#define FDT_END        9
 
-#define SW_HDR_WORDS        14
-#define SW_WORDS            1024
-#define SW_STRINGS          256
+#define SW_HDR_WORDS   14
+#define SW_WORDS       1024
+#define SW_STRINGS     256
 
 static uint32 sw_buf[SW_WORDS];
 static char sw_str[SW_STRINGS];
@@ -104,10 +104,11 @@ static void sw_prop_cells(const char *name, const uint32 *v, uint32 n)
     sw_prop(name, be, n << 2);
 }
 
-#define SW_STR(name, lit)       sw_prop((name), (lit), sizeof(lit))
-#define SW_CELLS(name, ...)     sw_prop_cells((name), (const uint32[]){ __VA_ARGS__ },  \
-    sizeof((const uint32[]){ __VA_ARGS__ }) / 4)
-#define SW_EMPTY(name)          sw_prop((name), "", 0)
+#define SW_STR(name, lit) sw_prop((name), (lit), sizeof(lit))
+#define SW_CELLS(name, ...)                              \
+    sw_prop_cells((name), (const uint32[]){__VA_ARGS__}, \
+        sizeof((const uint32[]){__VA_ARGS__}) / 4)
+#define SW_EMPTY(name) sw_prop((name), "", 0)
 
 static const void *sw_finish(void)
 {
@@ -339,7 +340,7 @@ static const void *fdt_fixture(void)
 }
 
 static const char fdt_console[] = "/bus@8000000/motherboard-bus@8000000"
-    "/iofpga-bus@300000000/serial@90000";
+                                  "/iofpga-bus@300000000/serial@90000";
 
 static int fdt_fixture_path(struct fdt *fdt, struct fdt_node *node,
     const char *path)
@@ -418,20 +419,28 @@ static void fdt_translate_picks_the_window(struct ktest *t)
     static const char mem[] = "/memory@80000000";
     uint64 addr, size;
 
-    KTEST_EXPECT(t, fdt_fixture_reg(flash, 0, &addr, &size)
-        && addr == 0x08000000UL && size == 0x04000000UL);
-    KTEST_EXPECT(t, fdt_fixture_reg(flash, 1, &addr, &size)
-        && addr == 0x0c000000UL && size == 0x04000000UL);
+    KTEST_EXPECT(t,
+        fdt_fixture_reg(flash, 0, &addr, &size)
+            && addr == 0x08000000UL
+            && size == 0x04000000UL);
+    KTEST_EXPECT(t,
+        fdt_fixture_reg(flash, 1, &addr, &size)
+            && addr == 0x0c000000UL
+            && size == 0x04000000UL);
 
-    KTEST_EXPECT(t, fdt_fixture_reg(gic, 0, &addr, NULL)
-        && addr == 0x2f000000UL);
-    KTEST_EXPECT(t, fdt_fixture_reg(gic, 1, &addr, NULL)
-        && addr == 0x2f100000UL);
+    KTEST_EXPECT(t,
+        fdt_fixture_reg(gic, 0, &addr, NULL) && addr == 0x2f000000UL);
+    KTEST_EXPECT(t,
+        fdt_fixture_reg(gic, 1, &addr, NULL) && addr == 0x2f100000UL);
 
-    KTEST_EXPECT(t, fdt_fixture_reg(mem, 0, &addr, &size)
-        && addr == 0x80000000UL && size == 0x7c000000UL);
-    KTEST_EXPECT(t, fdt_fixture_reg(mem, 1, &addr, &size)
-        && addr == 0x880000000UL && size == 0x80000000UL);
+    KTEST_EXPECT(t,
+        fdt_fixture_reg(mem, 0, &addr, &size)
+            && addr == 0x80000000UL
+            && size == 0x7c000000UL);
+    KTEST_EXPECT(t,
+        fdt_fixture_reg(mem, 1, &addr, &size)
+            && addr == 0x880000000UL
+            && size == 0x80000000UL);
 }
 KTEST_CASE(fdt_translate_picks_the_window);
 
@@ -439,8 +448,9 @@ static void fdt_translate_fails_without_a_window(struct ktest *t)
 {
     uint64 addr, size;
 
-    KTEST_EXPECT(t, !fdt_fixture_reg(
-        "/bus@8000000/motherboard-bus@8000000/sram@700000000", 0, &addr, &size));
+    KTEST_EXPECT(t,
+        !fdt_fixture_reg("/bus@8000000/motherboard-bus@8000000/sram@700000000",
+            0, &addr, &size));
     KTEST_EXPECT(t, !fdt_fixture_reg("/noranges/dev@0", 0, &addr, &size));
     KTEST_EXPECT(t, !fdt_fixture_reg("/oversize/dev@0", 0, &addr, &size));
 }
@@ -473,8 +483,10 @@ static void fdt_status_separates_described_from_usable(struct ktest *t)
     struct fdt fdt;
     struct fdt_node node;
 
-    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/bus@8000000"
-        "/motherboard-bus@8000000/iofpga-bus@300000000/serial@a0000"));
+    KTEST_ASSERT(t,
+        fdt_fixture_path(&fdt, &node,
+            "/bus@8000000"
+            "/motherboard-bus@8000000/iofpga-bus@300000000/serial@a0000"));
     KTEST_EXPECT(t, !fdt_node_is_available(&fdt, &node));
 
     KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, fdt_console));
@@ -490,15 +502,16 @@ static void fdt_find_path_resolves_aliases(struct ktest *t)
 
     KTEST_ASSERT(t, fdt_fixture_path(&fdt, &want, fdt_console));
 
-    KTEST_EXPECT(t, fdt_find_path(&fdt, chosen, 7, &node)
-        && node.props == want.props);
+    KTEST_EXPECT(t,
+        fdt_find_path(&fdt, chosen, 7, &node) && node.props == want.props);
 
-    KTEST_EXPECT(t, fdt_fixture_path(&fdt, &node, "serial0")
-        && node.props == want.props);
+    KTEST_EXPECT(t,
+        fdt_fixture_path(&fdt, &node, "serial0") && node.props == want.props);
 
-    KTEST_EXPECT(t, fdt_fixture_path(&fdt, &node,
-        "/bus@8000000/motherboard-bus/iofpga-bus/serial@90000")
-        && node.props == want.props);
+    KTEST_EXPECT(t,
+        fdt_fixture_path(&fdt, &node,
+            "/bus@8000000/motherboard-bus/iofpga-bus/serial@90000")
+            && node.props == want.props);
 
     KTEST_EXPECT(t, !fdt_find_path(&fdt, chosen, 0, &node));
     KTEST_EXPECT(t, !fdt_fixture_path(&fdt, &node, "serial9"));
@@ -554,19 +567,24 @@ static void fdt_irq_walks_the_interrupt_tree(struct ktest *t)
 
     KTEST_ASSERT(t, fdt_fixture_irq(&fdt, fdt_console, 0, &irq));
     KTEST_EXPECT(t, fdt_node_is(&irq.ctrl, "interrupt-controller"));
-    KTEST_EXPECT(t, irq.ncells == 3 && irq.cells[0] == 0
-        && irq.cells[1] == 5 && irq.cells[2] == 4);
+    KTEST_EXPECT(t,
+        irq.ncells == 3
+            && irq.cells[0] == 0
+            && irq.cells[1] == 5
+            && irq.cells[2] == 4);
     KTEST_EXPECT_EQ(t, dtb_intid(&fdt, &irq), 37U);
     KTEST_EXPECT(t, !fdt_fixture_irq(&fdt, fdt_console, 1, &irq));
 
-    KTEST_EXPECT(t, fdt_fixture_irq(&fdt, "/timer", 1, &irq)
-        && dtb_intid(&fdt, &irq) == 30U);
-    KTEST_EXPECT(t, fdt_fixture_irq(&fdt, "/timer", 3, &irq)
-        && dtb_intid(&fdt, &irq) == 26U);
+    KTEST_EXPECT(t,
+        fdt_fixture_irq(&fdt, "/timer", 1, &irq)
+            && dtb_intid(&fdt, &irq) == 30U);
+    KTEST_EXPECT(t,
+        fdt_fixture_irq(&fdt, "/timer", 3, &irq)
+            && dtb_intid(&fdt, &irq) == 26U);
     KTEST_EXPECT(t, !fdt_fixture_irq(&fdt, "/timer", 4, &irq));
 
-    KTEST_EXPECT(t, fdt_fixture_irq(&fdt, ext, 0, &irq)
-        && dtb_intid(&fdt, &irq) == 39U);
+    KTEST_EXPECT(t,
+        fdt_fixture_irq(&fdt, ext, 0, &irq) && dtb_intid(&fdt, &irq) == 39U);
 }
 KTEST_CASE(fdt_irq_walks_the_interrupt_tree);
 
@@ -575,10 +593,12 @@ static void fdt_irq_fails_without_a_usable_route(struct ktest *t)
     struct fdt fdt;
     struct fdt_irq irq;
 
-    KTEST_EXPECT(t, !fdt_fixture_irq(&fdt,
-        "/bus/motherboard-bus/iofpga-bus/nomap", 0, &irq));
-    KTEST_EXPECT(t, !fdt_fixture_irq(&fdt,
-        "/bus/motherboard-bus/iofpga-bus/offmap", 0, &irq));
+    KTEST_EXPECT(t,
+        !fdt_fixture_irq(&fdt, "/bus/motherboard-bus/iofpga-bus/nomap", 0,
+            &irq));
+    KTEST_EXPECT(t,
+        !fdt_fixture_irq(&fdt, "/bus/motherboard-bus/iofpga-bus/offmap", 0,
+            &irq));
     KTEST_EXPECT(t, !fdt_fixture_irq(&fdt, "/looped", 0, &irq));
     KTEST_EXPECT(t, !fdt_fixture_irq(&fdt, "/masked", 0, &irq));
 }
@@ -666,8 +686,8 @@ static void dtb_cpu_mpidr_takes_only_affinity(struct ktest *t)
     KTEST_EXPECT(t, !dtb_cpu_mpidr(&fdt, &node, 1, &mpidr));
 
     KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/cpus2/cpu@100000000"));
-    KTEST_EXPECT(t, dtb_cpu_mpidr(&fdt, &node, 2, &mpidr)
-        && mpidr == 0x100000000UL);
+    KTEST_EXPECT(t,
+        dtb_cpu_mpidr(&fdt, &node, 2, &mpidr) && mpidr == 0x100000000UL);
     KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/cpus2/cpu@10000000000"));
     KTEST_EXPECT(t, !dtb_cpu_mpidr(&fdt, &node, 2, &mpidr));
 }

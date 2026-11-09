@@ -19,18 +19,18 @@
  *        pass.
  */
 
-#include "sys/types.h"
-#include "arch/asid.h"
-#include "sys/elf.h"
 #include "sys/exec.h"
-#include "vm/kalloc.h"
-#include "sys/kio.h"
+#include "arch/asid.h"
+#include "arch/copy.h"
 #include "arch/memlayout.h"
 #include "arch/mmu.h"
+#include "arch/pmap.h"
+#include "sys/elf.h"
+#include "sys/kio.h"
 #include "sys/proc.h"
 #include "sys/string.h"
-#include "arch/pmap.h"
-#include "arch/copy.h"
+#include "sys/types.h"
+#include "vm/kalloc.h"
 
 /*
  * Embedded program table
@@ -82,7 +82,7 @@ static int load_segment(pte_t *pagetable, const uchar *src, struct proghdr *ph)
     int err;
 
     if ((ph->vaddr & (PGSIZE - 1)) != 0) {
-        return -1;      /* segments must be page-aligned */
+        return -1; /* segments must be page-aligned */
     }
     if (ph->memsz < ph->filesz) {
         return -1;
@@ -133,7 +133,7 @@ static int load_segment(pte_t *pagetable, const uchar *src, struct proghdr *ph)
  * with a meaningful boot log rather than just "exec failed".
  */
 int loadelf(pte_t *pagetable, const uchar *bytes, uint64 size,
-            uintptr *entry_out, uint64 *sz_out)
+    uintptr *entry_out, uint64 *sz_out)
 {
     struct elfhdr *eh;
     struct proghdr *ph;
@@ -147,8 +147,10 @@ int loadelf(pte_t *pagetable, const uchar *bytes, uint64 size,
 
     eh = (struct elfhdr *)bytes;
 
-    if (eh->ident[EI_MAG0] != ELFMAG0 || eh->ident[EI_MAG1] != ELFMAG1
-        || eh->ident[EI_MAG2] != ELFMAG2 || eh->ident[EI_MAG3] != ELFMAG3) {
+    if (eh->ident[EI_MAG0] != ELFMAG0
+        || eh->ident[EI_MAG1] != ELFMAG1
+        || eh->ident[EI_MAG2] != ELFMAG2
+        || eh->ident[EI_MAG3] != ELFMAG3) {
         printk("loadelf: bad magic\n");
         return -1;
     }
@@ -289,7 +291,7 @@ int exec(const char *path, uintptr uargv)
         }
     }
     if (elf_start == NULL) {
-        return -1;      /* no such binary */
+        return -1; /* no such binary */
     }
 
     /* Phase 1 */
@@ -376,10 +378,10 @@ int exec(const char *path, uintptr uargv)
         w[1 + i] = (uint64)(strbase + off);
         off += (uint64)strlen(argbuf + off) + 1;
     }
-    w[1 + argc] = 0;            /* argv[argc] = NULL */
-    w[2 + argc] = 0;            /* envp[0] = NULL */
-    w[3 + argc] = 0;            /* auxv: AT_NULL type */
-    w[4 + argc] = 0;            /* auxv: value 0 */
+    w[1 + argc] = 0; /* argv[argc] = NULL */
+    w[2 + argc] = 0; /* envp[0] = NULL */
+    w[3 + argc] = 0; /* auxv: AT_NULL type */
+    w[4 + argc] = 0; /* auxv: value 0 */
 
     if (argbuf != NULL) {
         kpage_free(argbuf);

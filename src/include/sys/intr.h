@@ -22,13 +22,13 @@
 #include "sys/types.h"
 
 /* Filter return codes */
-#define FILTER_STRAY            0   /* spurious / nothing for this source */
-#define FILTER_HANDLED          1   /* fully serviced in hardirq context */
-#define FILTER_SCHEDULE_THREAD  2   /* hand off to the source's ithread */
+#define FILTER_STRAY           0 /* spurious / nothing for this source */
+#define FILTER_HANDLED         1 /* fully serviced in hardirq context */
+#define FILTER_SCHEDULE_THREAD 2 /* hand off to the source's ithread */
 
 void intr_init(void);
 void intr_register(uint32 irq, const char *name, int (*filter)(void),
     void (*handler)(void));
 int intr_dispatch(uint32 irq);
 
-#endif  /* _AV6_INTR_H_ */
+#endif /* _AV6_INTR_H_ */

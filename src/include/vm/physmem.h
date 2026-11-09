@@ -24,9 +24,9 @@
 
 #include "sys/types.h"
 
-#define MAX_HWCNT           16      /* DTB-reported banks */
-#define MAX_EXCNT           16      /* excluded ranges */
-#define VM_PHYSSEG_MAX      64      /* avail segments (banks split by exclusions) */
+#define MAX_HWCNT      16 /* DTB-reported banks */
+#define MAX_EXCNT      16 /* excluded ranges */
+#define VM_PHYSSEG_MAX 64 /* avail segments (banks split by exclusions) */
 
 struct page;
 
@@ -72,10 +72,10 @@ void physmem_avail(void);
  */
 struct vm_phys_seg *physmem_seg(uint64 pa);
 
-uint64 physmem_size(void);          /* usable bytes. holes and exclusions omitted */
-uint64 physmem_start(void);         /* lowest hardware base */
-uint64 physmem_end(void);           /* highest hardware limit. holes included */
+uint64 physmem_size(void);  /* usable bytes. holes and exclusions omitted */
+uint64 physmem_start(void); /* lowest hardware base */
+uint64 physmem_end(void);   /* highest hardware limit. holes included */
 
 void physmem_print(void);
 
-#endif  /* _AV6_PHYSMEM_H_ */
+#endif /* _AV6_PHYSMEM_H_ */

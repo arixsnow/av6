@@ -9,7 +9,7 @@
 
 #include "sys/types.h"
 
-void * memset(void *dst, uchar c, uint64 n);
+void *memset(void *dst, uchar c, uint64 n);
 void *memcpy(void *dst, const void *src, uint64 n);
 void *memmove(void *dst, const void *src, uint64 n);
 int memcmp(const void *s1, const void *s2, uint64 n);
@@ -18,4 +18,4 @@ char *strncpy(char *dst, const char *src, uint64 n);
 int strcmp(const char *str1, const char *str2);
 int strncmp(const char *str1, const char *str2, uint64 n);
 
-#endif  /* _AV6_STRING_H_ */
+#endif /* _AV6_STRING_H_ */

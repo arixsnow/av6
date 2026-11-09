@@ -7,8 +7,8 @@
 #ifndef _AV6_ASID_H_
 #define _AV6_ASID_H_
 
-#include "sys/types.h"
 #include "arch/sysreg.h"
+#include "sys/types.h"
 
 struct proc;
 
@@ -33,7 +33,7 @@ struct proc;
  * otherwise 8-bit.
  */
 
-#define ASID_RESERVED       0
+#define ASID_RESERVED 0
 
 /*
  * asid_bits : 8 or 16, per ID_AA64MMFR0_EL1.ASIDBits[7:4]. Used by
@@ -43,8 +43,9 @@ static inline int asid_bits(void)
 {
     uint64 mmfr0 = read_sysreg(id_aa64mmfr0_el1);
 
-    return SYS_FIELD(mmfr0, ID_AA64MMFR0_ASIDBITS) ==
-           ID_AA64MMFR0_ASIDBITS_16 ? 16 : 8;
+    return SYS_FIELD(mmfr0, ID_AA64MMFR0_ASIDBITS) == ID_AA64MMFR0_ASIDBITS_16
+        ? 16
+        : 8;
 }
 
 void asid_init(void);
@@ -52,4 +53,4 @@ void asid_switch(struct proc *p);
 void asid_flush(struct proc *p);
 uint16 asid_num(const struct proc *p);
 
-#endif  /* _AV6_ASID_H_ */
+#endif /* _AV6_ASID_H_ */

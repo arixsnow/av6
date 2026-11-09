@@ -22,15 +22,15 @@
  */
 
 /* Interrupt IDs */
-#define IRQ_PANIC       0           /* SGI 0: panic halt IPI */
+#define IRQ_PANIC 0 /* SGI 0: panic halt IPI */
 
 /* An interrupt specifier numbers within its type, not across all INTIDs. */
-#define GIC_PPI_BASE    16
-#define GIC_SPI_BASE    32
-#define GIC_SPI_END     1020
+#define GIC_PPI_BASE 16
+#define GIC_SPI_BASE 32
+#define GIC_SPI_END  1020
 
 /* Returned by gic_acknwlg() when no real IRQ is pending */
-#define GIC_SPURIOUS    1023
+#define GIC_SPURIOUS 1023
 
 void gic_init(void);
 void gic_inithart(void);
@@ -49,8 +49,8 @@ uint32 gic_nirqs(void);
  * GIC_PRIO_NMI is a reserved higher-priority band (lower value = higher
  * priority) kept for a future pseudo-NMI.
  */
-#define GIC_PRIO_NMI            0x80
-#define GIC_PRIO_DEFAULT        0xA0
+#define GIC_PRIO_NMI     0x80
+#define GIC_PRIO_DEFAULT 0xA0
 
 /* Per-IRQ irqchip operations */
 void gic_irq_enable(uint32 irq);
@@ -62,4 +62,4 @@ void gic_irq_set_affinity(uint32 irq, uint64 aff);
 /* Send SGI to all CPUs except self */
 void gic_send_sgi_all(uint32 intid);
 
-#endif      /* _AV6_GIC_H_ */
+#endif /* _AV6_GIC_H_ */

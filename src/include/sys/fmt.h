@@ -24,4 +24,4 @@
 int vsnprintf(char *buf, uint64 size, const char *fmt, va_list ap);
 int snprintf(char *buf, uint64 size, const char *fmt, ...);
 
-#endif      /* _AV6_FMT_H_ */
+#endif /* _AV6_FMT_H_ */

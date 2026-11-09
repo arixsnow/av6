@@ -54,4 +54,4 @@ int copyout(uintptr user_dst, const void *str, uint64 len);
  */
 int copyinstr(char *dst, uintptr user_src, uint64 max);
 
-#endif      /* _AV6_COPY_H_ */
+#endif /* _AV6_COPY_H_ */

@@ -19,10 +19,11 @@
  * pid_lock and kstack_lock are independent leaves.
  */
 
+#include "sys/proc.h"
 #include "arch/arm64.h"
 #include "arch/asid.h"
-#include "arch/cpu.h"
 #include "arch/copy.h"
+#include "arch/cpu.h"
 #include "arch/memlayout.h"
 #include "arch/mmu.h"
 #include "arch/pmap.h"
@@ -31,30 +32,29 @@
 #include "sys/kassert.h"
 #include "sys/kio.h"
 #include "sys/list.h"
-#include "sys/proc.h"
 #include "sys/spinlock.h"
 #include "sys/string.h"
 #include "sys/types.h"
 #include "vm/kalloc.h"
 #include "vm/kmem.h"
 
-#define PIDHASH_BUCKETS         64      /* power of two */
+#define PIDHASH_BUCKETS 64 /* power of two */
 
 LIST_HEAD(proc_list, proc);
 TAILQ_HEAD(proc_runq, proc);
 
 static struct kmem_cache *proc_cache;
 
-static struct proc_list allproc;                    /* every live proc */
-static struct proc_list pidhash[PIDHASH_BUCKETS];   /* pid -> proc */
-static struct proc_runq runq;                       /* RUNNABLE procs, FIFO */
+static struct proc_list allproc;                  /* every live proc */
+static struct proc_list pidhash[PIDHASH_BUCKETS]; /* pid -> proc */
+static struct proc_runq runq;                     /* RUNNABLE procs, FIFO */
 
-static struct spinlock ptable_lock;     /* protects alloc + pidhash */
-static struct spinlock runq_lock;       /* protects runq */
-static struct spinlock pid_lock;        /* protects pidmap */
-struct spinlock wait_lock;              /* protects proc->parent */
+static struct spinlock ptable_lock; /* protects alloc + pidhash */
+static struct spinlock runq_lock;   /* protects runq */
+static struct spinlock pid_lock;    /* protects pidmap */
+struct spinlock wait_lock;          /* protects proc->parent */
 
-static bit_decl(pidmap, KSTACK_NSLOTS);     /* 1 = pid in use, pid 0 is reserved */
+static bit_decl(pidmap, KSTACK_NSLOTS); /* 1 = pid in use, pid 0 is reserved */
 
 struct proc *initproc;
 
@@ -145,7 +145,7 @@ void procinit(void)
         LIST_INIT(&pidhash[i]);
     }
 
-    bit_set(pidmap, 0);         /* reserve pid 0 */
+    bit_set(pidmap, 0); /* reserve pid 0 */
 
     proc_cache = kmem_cache_create("proc", sizeof(struct proc), 0, proc_ctor);
     if (proc_cache == NULL) {
@@ -329,11 +329,11 @@ void userinit(void)
 
     sp = (sz + PGSIZE - 5 * sizeof(uint64)) & ~0xfUL;
     w = (uint64 *)(stack + (sp - sz));
-    w[0] = 0;       /* argc */
-    w[1] = 0;       /* argv NULL */
-    w[2] = 0;       /* envp NULL */
-    w[3] = 0;       /* auxv AT_NULL type */
-    w[4] = 0;       /* auxv value */
+    w[0] = 0; /* argc */
+    w[1] = 0; /* argv NULL */
+    w[2] = 0; /* envp NULL */
+    w[3] = 0; /* auxv AT_NULL type */
+    w[4] = 0; /* auxv value */
 
     p->sz = sz + PGSIZE;
 
@@ -348,8 +348,8 @@ void userinit(void)
     pid = p->pid;
     initproc = p;
 
-    printk("userinit: pid %d created (entry=%p, sz=%lu)\n",
-        pid, (void *)entry, p->sz);
+    printk("userinit: pid %d created (entry=%p, sz=%lu)\n", pid, (void *)entry,
+        p->sz);
 
     proc_activate(p, NULL);
 }

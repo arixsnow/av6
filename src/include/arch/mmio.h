@@ -67,4 +67,4 @@ static inline void mmio_write64(uintptr addr, uint64 val)
     *(volatile uint64 *)addr = val;
 }
 
-#endif  /* _AV6_MMIO_H_ */
+#endif /* _AV6_MMIO_H_ */

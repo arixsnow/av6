@@ -163,7 +163,8 @@ static void kmsg_wrap(struct ktest *t)
 
         t->checks++;
         if (d.seq != s) {
-            ktest_bad(t, __FILE__, __LINE__, "seq %lu read back as %lu", s, d.seq);
+            ktest_bad(t, __FILE__, __LINE__, "seq %lu read back as %lu", s,
+                d.seq);
             break;
         }
     }

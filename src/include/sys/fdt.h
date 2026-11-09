@@ -18,8 +18,8 @@
  * is not damage and returns NULL.
  */
 
-#define FDT_MAX_CELLS           4
-#define FDT_MAX_IRQ_ARGS        16
+#define FDT_MAX_CELLS    4
+#define FDT_MAX_IRQ_ARGS 16
 
 struct fdt {
     const uint32 *struct_start;
@@ -86,4 +86,4 @@ uint32 fdt32(uint32 v);
 uint64 fdt64(const uint32 *cells);
 int fdt_cells(const uint32 *cells, int n, uint64 *out);
 
-#endif  /* _AV6_FDT_H_ */
+#endif /* _AV6_FDT_H_ */

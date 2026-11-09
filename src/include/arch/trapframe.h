@@ -34,12 +34,12 @@
  * sizeof(struct trapframe) == 288 (0x120), 16-byte aligned.
  */
 struct trapframe {
-    uint64 x[31];           /*   0: x0-x30 (general-purpose registers) */
-    uint64 sp;              /* 248: SP_EL0 (user stack pointer) */
-    uint64 elr;             /* 256: ELR_EL1 (user return address) */
-    uint64 spsr;            /* 264: SPSR_EL1 (user saved PSTATE) */
-    uint64 tpidr;           /* 272: TPIDR_EL0 (user thread pointer) */
-    uint64 _pad;            /* 280: padding for 16-byte alignment */
+    uint64 x[31]; /*   0: x0-x30 (general-purpose registers) */
+    uint64 sp;    /* 248: SP_EL0 (user stack pointer) */
+    uint64 elr;   /* 256: ELR_EL1 (user return address) */
+    uint64 spsr;  /* 264: SPSR_EL1 (user saved PSTATE) */
+    uint64 tpidr; /* 272: TPIDR_EL0 (user thread pointer) */
+    uint64 _pad;  /* 280: padding for 16-byte alignment */
 };
 
-#endif      /* _AV6_TRAPFRAME_H_ */
+#endif /* _AV6_TRAPFRAME_H_ */

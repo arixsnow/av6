@@ -17,18 +17,18 @@
  * After uart_remap(), TTBR0 can safely become user page tables!
  */
 
-#include "arch/platform.h"
+#include "dev/uart.h"
 #include "arch/memlayout.h"
 #include "arch/mmio.h"
-#include "dev/uart.h"
+#include "arch/platform.h"
 #include "sys/kio.h"
 #include "sys/types.h"
 
-#define UART_BAUD           115200
+#define UART_BAUD 115200
 
 /* FIFO depth by peripheral revision */
-#define UART_FIFO_REV2      16
-#define UART_FIFO_REV3      32
+#define UART_FIFO_REV2 16
+#define UART_FIFO_REV3 32
 
 /*
  * Runtime UART base address.
@@ -40,7 +40,7 @@ static volatile uintptr uart_base = UART0_BASE_PA;
 
 static uint32 uart_fifo_depth = UART_FIFO_REV2;
 
-#define UART_REG(off)       (uart_base + (off))
+#define UART_REG(off) (uart_base + (off))
 
 void uart_init(void)
 {
@@ -129,8 +129,9 @@ void uart_config(uint32 uartclk)
 
 void uart_putc(char c)
 {
-    while (mmio_read32(UART_REG(UART_FR)) & UART_FR_TXFF)
+    while (mmio_read32(UART_REG(UART_FR)) & UART_FR_TXFF) {
         continue;
+    }
 
     mmio_write32(UART_REG(UART_DR), (uint32)c);
 }

@@ -21,9 +21,9 @@
  * exclusions grow to whole pages. Both err towards handing out less.
  */
 
-#include "sys/kio.h"
-#include "arch/mmu.h"
 #include "vm/physmem.h"
+#include "arch/mmu.h"
+#include "sys/kio.h"
 #include "sys/types.h"
 
 static struct region hwregions[MAX_HWCNT];
@@ -72,8 +72,8 @@ static int merge_upper(struct region *regions, int cnt, int i)
  * Insertion-sort [addr, addr + size) into a region list, merging into any entry
  * its overlaps or touches. Returns the new count, or -1 if the list is full.
  */
-static int insert_region(struct region *regions, int cnt, int max,
-    uint64 addr, uint64 size)
+static int insert_region(struct region *regions, int cnt, int max, uint64 addr,
+    uint64 size)
 {
     uint64 end, rend;
     int i, j;
@@ -219,11 +219,11 @@ void physmem_avail(void)
             }
 
             if (xstart >= end) {
-                break;          /* sorted: nothing later reaches this bank */
+                break; /* sorted: nothing later reaches this bank */
             }
 
             if (xstart <= start) {
-                start = xend;   /* clips the front, or cover the bank */
+                start = xend; /* clips the front, or cover the bank */
                 if (start >= end) {
                     break;
                 }
@@ -232,11 +232,11 @@ void physmem_avail(void)
             }
 
             if (xend >= end) {
-                end = xstart;       /* clips the tail */
+                end = xstart; /* clips the tail */
                 break;
             }
 
-            add_seg(start, xstart);     /* strictly interior: split the bank */
+            add_seg(start, xstart); /* strictly interior: split the bank */
             start = xend;
         }
 
@@ -303,7 +303,8 @@ void physmem_print(void)
     }
 
     for (i = 0; i < vm_phys_nsegs; i++) {
-        printk("physmem: seg %d: %#lx-%#lx (%lu MB)\n", i, vm_phys_segs[i].start,
-            vm_phys_segs[i].end, (vm_phys_segs[i].end - vm_phys_segs[i].start) >> 20);
+        printk("physmem: seg %d: %#lx-%#lx (%lu MB)\n", i,
+            vm_phys_segs[i].start, vm_phys_segs[i].end,
+            (vm_phys_segs[i].end - vm_phys_segs[i].start) >> 20);
     }
 }
