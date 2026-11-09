@@ -669,3 +669,14 @@ static void dtb_cpu_mpidr_takes_only_affinity(struct ktest *t)
     KTEST_EXPECT(t, !dtb_cpu_mpidr(&fdt, &node, 2, &mpidr));
 }
 KTEST_CASE(dtb_cpu_mpidr_takes_only_affinity);
+
+static void fdt_hasprop_sees_empty_properties(struct ktest *t)
+{
+    struct fdt fdt;
+    struct fdt_node node;
+
+    KTEST_ASSERT(t, fdt_fixture_path(&fdt, &node, "/interrupt-controller"));
+    KTEST_EXPECT(t, fdt_hasprop(&fdt, &node, "interrupt-controller"));
+    KTEST_EXPECT(t, !fdt_hasprop(&fdt, &node, "interrupt-map"));
+}
+KTEST_CASE(fdt_hasprop_sees_empty_properties);

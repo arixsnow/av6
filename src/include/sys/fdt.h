@@ -74,6 +74,8 @@ int fdt_irq(const struct fdt *fdt, const struct fdt_node *node, uint32 index,
 
 const void *fdt_getprop(const struct fdt *fdt, const struct fdt_node *node,
     const char *name, uint32 *lenp);
+int fdt_hasprop(const struct fdt *fdt, const struct fdt_node *node,
+    const char *name);
 int fdt_prop_u32(const struct fdt *fdt, const struct fdt_node *node,
     const char *name, uint32 *out);
 int fdt_node_by_phandle(const struct fdt *fdt, uint32 phandle,

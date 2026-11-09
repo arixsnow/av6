@@ -321,6 +321,12 @@ const void *fdt_getprop(const struct fdt *fdt, const struct fdt_node *node,
     return fdt_getprop_namelen(fdt, node, name, (uint32)strlen(name), lenp);
 }
 
+int fdt_hasprop(const struct fdt *fdt, const struct fdt_node *node,
+    const char *name)
+{
+    return fdt_getprop(fdt, node, name, NULL) != NULL;
+}
+
 int fdt_prop_u32(const struct fdt *fdt, const struct fdt_node *node,
     const char *name, uint32 *out)
 {
@@ -866,13 +872,13 @@ static int fdt_irq_walk(const struct fdt *fdt, struct fdt_node cur,
     uint32 *addr, uint32 naddr, struct fdt_irq *irq)
 {
     struct fdt_node next;
-    uint32 hop, max, len, v;
+    uint32 hop, max, v;
     int r;
 
     max = fdt_max_nodes(fdt);
 
     for (hop = 0; hop < max; hop++) {
-        if (fdt_getprop(fdt, &cur, "interrupt-map", &len) != NULL) {
+        if (fdt_hasprop(fdt, &cur, "interrupt-map")) {
             r = fdt_irq_map(fdt, &cur, addr, &naddr, irq, &next);
 
             if (r == 0) {
@@ -883,7 +889,7 @@ static int fdt_irq_walk(const struct fdt *fdt, struct fdt_node cur,
                 irq->ctrl = next;
                 return 1;
             }
-        } else if (fdt_getprop(fdt, &cur, "interrupt-controller", &len) != NULL) {
+        } else if (fdt_hasprop(fdt, &cur, "interrupt-controller")) {
             irq->ctrl = cur;
             return 1;
         } else if (!fdt_irq_parent(fdt, &cur, &next)
