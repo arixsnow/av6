@@ -11,8 +11,10 @@
  * truncated line from a complete one. buf is always NUL terminated when size
  * is non-zero.
  *
- * %d %u %x %o %c %s %p, the l modifier for 64-bit arguments, # for a 0x or 0
- * prefix, a minimum field width and 0 to pad it with zeros.
+ * C's integer conversions with every flag, width and precision, and the
+ * hh h l ll j z t sizes, plus %c %s %%. %p prints 0x and 16 hex digits. No
+ * floating point. %n stores nothing, and an unknown conversion ends
+ * formatting: the rest of the format is copied as it is.
  */
 
 #ifndef _AV6_FMT_H_
