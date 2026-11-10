@@ -28,7 +28,7 @@
 #ifndef _AV6_MMIO_H_
 #define _AV6_MMIO_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 static inline uint32 mmio_read32(uintptr addr)
 {

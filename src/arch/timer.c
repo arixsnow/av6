@@ -16,14 +16,14 @@
  *      CNTP_CTL_EL0 - control: bit 0 = enable, bit 1 = mask output
  */
 
-#include "arch/timer.h"
-#include "arch/arm64.h"
-#include "arch/cpu.h"
-#include "arch/dtb.h"
-#include "arch/platform.h"
-#include "sys/intr.h"
-#include "sys/kio.h"
-#include "sys/types.h"
+#include <arch/timer.h>
+#include <arch/arm64.h>
+#include <arch/cpu.h>
+#include <arch/dtb.h>
+#include <arch/platform.h>
+#include <sys/intr.h>
+#include <sys/kio.h>
+#include <sys/types.h>
 
 #define TIMER_HZ 10 /* 10 ticks per second (100ms interval) */
 

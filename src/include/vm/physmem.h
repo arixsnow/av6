@@ -22,7 +22,7 @@
 #ifndef _AV6_PHYSMEM_H_
 #define _AV6_PHYSMEM_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 #define MAX_HWCNT      16 /* DTB-reported banks */
 #define MAX_EXCNT      16 /* excluded ranges */

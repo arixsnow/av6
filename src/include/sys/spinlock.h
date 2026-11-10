@@ -7,7 +7,7 @@
 #ifndef _AV6_SPINLOCK_H_
 #define _AV6_SPINLOCK_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 struct cpu;
 

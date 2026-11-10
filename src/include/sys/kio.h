@@ -7,7 +7,7 @@
 #ifndef _AV6_KIO_H_
 #define _AV6_KIO_H_
 
-#include "arch/stdarg.h"
+#include <arch/stdarg.h>
 
 /*
  * Log levels - lower number = more urgent. Carried per message

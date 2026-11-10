@@ -7,8 +7,8 @@
 #ifndef _AV6_TRAPFRAME_H_
 #define _AV6_TRAPFRAME_H_
 
-#include "arch/assym.h"
-#include "sys/types.h"
+#include <arch/assym.h>
+#include <sys/types.h>
 
 /*
  * Trapframe: saved user state on the process's kernel stack

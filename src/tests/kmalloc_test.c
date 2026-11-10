@@ -8,11 +8,11 @@
  * Test suite for the variable kernel allocator
  */
 
-#include "arch/mmu.h"
-#include "sys/string.h"
-#include "sys/types.h"
-#include "tests/ktest.h"
-#include "vm/kmalloc.h"
+#include <arch/mmu.h>
+#include <sys/string.h>
+#include <sys/types.h>
+#include <tests/ktest.h>
+#include <vm/kmalloc.h>
 
 #define NBLOCK 4
 

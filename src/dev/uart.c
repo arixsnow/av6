@@ -17,12 +17,12 @@
  * After uart_remap(), TTBR0 can safely become user page tables!
  */
 
-#include "dev/uart.h"
-#include "arch/memlayout.h"
-#include "arch/mmio.h"
-#include "arch/platform.h"
-#include "sys/kio.h"
-#include "sys/types.h"
+#include <dev/uart.h>
+#include <arch/memlayout.h>
+#include <arch/mmio.h>
+#include <arch/platform.h>
+#include <sys/kio.h>
+#include <sys/types.h>
 
 #define UART_BAUD 115200
 

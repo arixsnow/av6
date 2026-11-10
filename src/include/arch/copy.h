@@ -7,7 +7,7 @@
 #ifndef _AV6_COPY_H_
 #define _AV6_COPY_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 /*
  * copy.h - safe access to user memory from the kernel

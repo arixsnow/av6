@@ -12,7 +12,7 @@
 #ifndef _AV6_BITOPS_H_
 #define _AV6_BITOPS_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 /* AArch64 is LP64. a long is 64 bits */
 #define BITS_PER_LONG 64

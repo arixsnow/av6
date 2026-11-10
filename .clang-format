@@ -80,4 +80,5 @@ SortIncludes:
   Enabled: true
   IgnoreCase: false
 IncludeBlocks: Preserve
+MainIncludeChar: AngleBracket
 ...

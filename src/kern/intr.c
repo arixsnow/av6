@@ -13,15 +13,15 @@
  * start), then read-only on the dispatch path, so dispatch needs no lock.
  */
 
-#include "sys/intr.h"
-#include "arch/gic.h"
-#include "sys/kassert.h"
-#include "sys/kio.h"
-#include "sys/proc.h"
-#include "sys/spinlock.h"
-#include "sys/string.h"
-#include "sys/types.h"
-#include "vm/kmalloc.h"
+#include <sys/intr.h>
+#include <arch/gic.h>
+#include <sys/kassert.h>
+#include <sys/kio.h>
+#include <sys/proc.h>
+#include <sys/spinlock.h>
+#include <sys/string.h>
+#include <sys/types.h>
+#include <vm/kmalloc.h>
 
 struct intr_src {
     const char *name;

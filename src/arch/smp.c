@@ -11,17 +11,17 @@
  * for CPU power management.
  */
 
-#include "arch/smp.h"
-#include "arch/arm64.h"
-#include "arch/cpu.h"
-#include "arch/dtb.h"
-#include "arch/gic.h"
-#include "arch/memlayout.h"
-#include "arch/pmap.h"
-#include "arch/timer.h"
-#include "sys/kio.h"
-#include "sys/proc.h"
-#include "sys/types.h"
+#include <arch/smp.h>
+#include <arch/arm64.h>
+#include <arch/cpu.h>
+#include <arch/dtb.h>
+#include <arch/gic.h>
+#include <arch/memlayout.h>
+#include <arch/pmap.h>
+#include <arch/timer.h>
+#include <sys/kio.h>
+#include <sys/proc.h>
+#include <sys/types.h>
 
 /* PSCI function IDs (SMC Calling Convention, 64-bit) */
 #define PSCI_CPU_ON            0xC4000003UL

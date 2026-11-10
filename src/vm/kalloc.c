@@ -19,16 +19,16 @@
  * reached through the DMAP.
  */
 
-#include "vm/kalloc.h"
-#include "arch/memlayout.h"
-#include "arch/mmu.h"
-#include "arch/pmap.h"
-#include "sys/kassert.h"
-#include "sys/kio.h"
-#include "sys/spinlock.h"
-#include "sys/types.h"
-#include "vm/kmem.h"
-#include "vm/physmem.h"
+#include <vm/kalloc.h>
+#include <arch/memlayout.h>
+#include <arch/mmu.h>
+#include <arch/pmap.h>
+#include <sys/kassert.h>
+#include <sys/kio.h>
+#include <sys/spinlock.h>
+#include <sys/types.h>
+#include <vm/kmem.h>
+#include <vm/physmem.h>
 
 extern char end[];
 

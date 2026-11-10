@@ -20,13 +20,13 @@
  * thing under test here, and a report carried by the subject proves nothing.
  */
 
-#include "tests/ktest.h"
-#include "arch/arm64.h"
-#include "arch/stdarg.h"
-#include "dev/console.h"
-#include "sys/fmt.h"
-#include "sys/param.h"
-#include "sys/types.h"
+#include <tests/ktest.h>
+#include <arch/arm64.h>
+#include <arch/stdarg.h>
+#include <dev/console.h>
+#include <sys/fmt.h>
+#include <sys/param.h>
+#include <sys/types.h>
 
 #define KTRF_VERSION   1
 #define KTEST_LINE_MAX 256

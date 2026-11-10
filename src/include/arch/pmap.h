@@ -7,7 +7,7 @@
 #ifndef _AV6_PMAP_H_
 #define _AV6_PMAP_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 /* Kernel page tables (boot) */
 uintptr boot_alloc(uint64 npages);

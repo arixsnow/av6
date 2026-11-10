@@ -19,7 +19,7 @@
 #ifndef _AV6_INTR_H_
 #define _AV6_INTR_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 /* Filter return codes */
 #define FILTER_STRAY           0 /* spurious / nothing for this source */

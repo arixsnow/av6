@@ -11,7 +11,7 @@
 #ifndef _AV6_LIST_H_
 #define _AV6_LIST_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 /*
  * LIST - intrusive doubly-linked lists.

@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "vm/kmalloc.h"
-#include "arch/mmu.h"
-#include "sys/kio.h"
-#include "sys/types.h"
-#include "vm/kalloc.h"
-#include "vm/kmem.h"
+#include <vm/kmalloc.h>
+#include <arch/mmu.h>
+#include <sys/kio.h>
+#include <sys/types.h>
+#include <vm/kalloc.h>
+#include <vm/kmem.h>
 
 #define KMALLOC_ALIGN  16
 #define KMALLOC_NCLASS 10

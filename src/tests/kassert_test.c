@@ -8,11 +8,11 @@
  * Test suite for the invariant macros.
  */
 
-#include "sys/kassert.h"
-#include "sys/kmsg.h"
-#include "sys/string.h"
-#include "sys/types.h"
-#include "tests/ktest.h"
+#include <sys/kassert.h>
+#include <sys/kmsg.h>
+#include <sys/string.h>
+#include <sys/types.h>
+#include <tests/ktest.h>
 
 static void kwarn_returns_condition(struct ktest *t)
 {

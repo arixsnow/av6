@@ -12,12 +12,12 @@
  * available to it.
  */
 
-#include "arch/arm64.h"
-#include "sys/kio.h"
-#include "sys/param.h"
-#include "sys/proc.h"
-#include "sys/types.h"
-#include "tests/ktest.h"
+#include <arch/arm64.h>
+#include <sys/kio.h>
+#include <sys/param.h>
+#include <sys/proc.h>
+#include <sys/types.h>
+#include <tests/ktest.h>
 
 #define HELPER_WAIT_MS 100
 

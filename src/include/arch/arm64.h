@@ -7,8 +7,8 @@
 #ifndef _AV6_ARM64_H_
 #define _AV6_ARM64_H_
 
-#include "sys/bitops.h"
-#include "sys/types.h"
+#include <sys/bitops.h>
+#include <sys/types.h>
 
 /* MPIDR_EL1 affinity: Aff3[39:32] | Aff2[23:16] | Aff1[15:8] | Aff0[7:0] */
 #define MPIDR_AFF_MASK     0xFF00FFFFFFUL

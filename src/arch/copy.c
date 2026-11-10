@@ -19,10 +19,10 @@
  *      3. call the assembly primitive (return 0 ok, -1 on fault)
  */
 
-#include "arch/copy.h"
-#include "arch/mmu.h"
-#include "sys/proc.h"
-#include "sys/types.h"
+#include <arch/copy.h>
+#include <arch/mmu.h>
+#include <sys/proc.h>
+#include <sys/types.h>
 
 extern char _copy_fault[];
 

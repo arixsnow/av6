@@ -7,8 +7,8 @@
 #ifndef _AV6_ASID_H_
 #define _AV6_ASID_H_
 
-#include "arch/sysreg.h"
-#include "sys/types.h"
+#include <arch/sysreg.h>
+#include <sys/types.h>
 
 struct proc;
 

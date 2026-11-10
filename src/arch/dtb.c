@@ -14,16 +14,16 @@
  * One consumer per node type. The walk and its bounds live in the fdt reader.
  */
 
-#include "arch/dtb.h"
-#include "arch/arm64.h"
-#include "arch/gic.h"
-#include "arch/memlayout.h"
-#include "arch/platform.h"
-#include "sys/fdt.h"
-#include "sys/kio.h"
-#include "sys/string.h"
-#include "sys/types.h"
-#include "vm/physmem.h"
+#include <arch/dtb.h>
+#include <arch/arm64.h>
+#include <arch/gic.h>
+#include <arch/memlayout.h>
+#include <arch/platform.h>
+#include <sys/fdt.h>
+#include <sys/kio.h>
+#include <sys/string.h>
+#include <sys/types.h>
+#include <vm/physmem.h>
 
 /* First cell of a GIC interrupt specifier */
 #define DT_INTR_SPI      0

@@ -7,7 +7,7 @@
 #ifndef _AV6_TYPES_H_
 #define _AV6_TYPES_H_
 
-#include "sys/cdefs.h"
+#include <sys/cdefs.h>
 
 typedef signed char int8;
 typedef unsigned char uint8;

@@ -7,8 +7,8 @@
 #ifndef _AV6_UART_H_
 #define _AV6_UART_H_
 
-#include "sys/bitops.h"
-#include "sys/types.h"
+#include <sys/bitops.h>
+#include <sys/types.h>
 
 /*
  * PL011 URT on QEMU virt machine

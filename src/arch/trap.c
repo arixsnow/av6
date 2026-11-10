@@ -13,18 +13,18 @@
  *                  trap_irq reused - called from el0_irq
  */
 
-#include "arch/arm64.h"
-#include "arch/gic.h"
-#include "arch/mte.h"
-#include "arch/sysreg.h"
-#include "arch/trapframe.h"
-#include "sys/bitops.h"
-#include "sys/intr.h"
-#include "sys/kassert.h"
-#include "sys/kio.h"
-#include "sys/proc.h"
-#include "sys/syscall.h"
-#include "sys/types.h"
+#include <arch/arm64.h>
+#include <arch/gic.h>
+#include <arch/mte.h>
+#include <arch/sysreg.h>
+#include <arch/trapframe.h>
+#include <sys/bitops.h>
+#include <sys/intr.h>
+#include <sys/kassert.h>
+#include <sys/kio.h>
+#include <sys/proc.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 
 /* Called from vectors.s */
 void trap_sync(struct trapframe *tf, uint64 esr, uint64 far);

@@ -19,24 +19,24 @@
  * pid_lock and kstack_lock are independent leaves.
  */
 
-#include "sys/proc.h"
-#include "arch/arm64.h"
-#include "arch/asid.h"
-#include "arch/copy.h"
-#include "arch/cpu.h"
-#include "arch/memlayout.h"
-#include "arch/mmu.h"
-#include "arch/pmap.h"
-#include "sys/bitstring.h"
-#include "sys/exec.h"
-#include "sys/kassert.h"
-#include "sys/kio.h"
-#include "sys/list.h"
-#include "sys/spinlock.h"
-#include "sys/string.h"
-#include "sys/types.h"
-#include "vm/kalloc.h"
-#include "vm/kmem.h"
+#include <sys/proc.h>
+#include <arch/arm64.h>
+#include <arch/asid.h>
+#include <arch/copy.h>
+#include <arch/cpu.h>
+#include <arch/memlayout.h>
+#include <arch/mmu.h>
+#include <arch/pmap.h>
+#include <sys/bitstring.h>
+#include <sys/exec.h>
+#include <sys/kassert.h>
+#include <sys/kio.h>
+#include <sys/list.h>
+#include <sys/spinlock.h>
+#include <sys/string.h>
+#include <sys/types.h>
+#include <vm/kalloc.h>
+#include <vm/kmem.h>
 
 #define PIDHASH_BUCKETS 64 /* power of two */
 

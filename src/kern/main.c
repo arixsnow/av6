@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "arch/arm64.h"
-#include "arch/asid.h"
-#include "arch/dtb.h"
-#include "arch/gic.h"
-#include "arch/pmap.h"
-#include "arch/smp.h"
-#include "arch/timer.h"
-#include "dev/console.h"
-#include "dev/uart.h"
-#include "sys/intr.h"
-#include "sys/kio.h"
-#include "sys/proc.h"
-#include "vm/kalloc.h"
-#include "vm/kmalloc.h"
-#include "vm/kmem.h"
+#include <arch/arm64.h>
+#include <arch/asid.h>
+#include <arch/dtb.h>
+#include <arch/gic.h>
+#include <arch/pmap.h>
+#include <arch/smp.h>
+#include <arch/timer.h>
+#include <dev/console.h>
+#include <dev/uart.h>
+#include <sys/intr.h>
+#include <sys/kio.h>
+#include <sys/proc.h>
+#include <vm/kalloc.h>
+#include <vm/kmalloc.h>
+#include <vm/kmem.h>
 
 #ifdef AV6_KTEST
-#include "tests/ktest.h"
+#include <tests/ktest.h>
 #endif
 
 /* Called from entry.s */

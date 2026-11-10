@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "arch/dtb.h"
-#include "sys/fdt.h"
-#include "sys/string.h"
-#include "sys/types.h"
-#include "tests/ktest.h"
+#include <arch/dtb.h>
+#include <sys/fdt.h>
+#include <sys/string.h>
+#include <sys/types.h>
+#include <tests/ktest.h>
 
 /* Define here rather than shared, so a wrong value in the reader shows up. */
 #define FDT_MAGIC      0xD00DFEED

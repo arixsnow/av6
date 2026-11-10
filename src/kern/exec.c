@@ -19,18 +19,18 @@
  *        pass.
  */
 
-#include "sys/exec.h"
-#include "arch/asid.h"
-#include "arch/copy.h"
-#include "arch/memlayout.h"
-#include "arch/mmu.h"
-#include "arch/pmap.h"
-#include "sys/elf.h"
-#include "sys/kio.h"
-#include "sys/proc.h"
-#include "sys/string.h"
-#include "sys/types.h"
-#include "vm/kalloc.h"
+#include <sys/exec.h>
+#include <arch/asid.h>
+#include <arch/copy.h>
+#include <arch/memlayout.h>
+#include <arch/mmu.h>
+#include <arch/pmap.h>
+#include <sys/elf.h>
+#include <sys/kio.h>
+#include <sys/proc.h>
+#include <sys/string.h>
+#include <sys/types.h>
+#include <vm/kalloc.h>
 
 /*
  * Embedded program table

@@ -12,7 +12,7 @@
 #ifndef _AV6_SYSREG_H_
 #define _AV6_SYSREG_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 /*
  * read_sysreg(reg) : mrs 'reg' into a uint64 expression. 'reg' is the

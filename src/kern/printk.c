@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "arch/arm64.h"
-#include "arch/stdarg.h"
-#include "dev/console.h"
-#include "sys/fmt.h"
-#include "sys/kio.h"
-#include "sys/kmsg.h"
-#include "sys/spinlock.h"
+#include <arch/arm64.h>
+#include <arch/stdarg.h>
+#include <dev/console.h>
+#include <sys/fmt.h>
+#include <sys/kio.h>
+#include <sys/kmsg.h>
+#include <sys/spinlock.h>
 
 /* vprintk formats here and hands the finished line to kmsg_add(). */
 static struct kstage {

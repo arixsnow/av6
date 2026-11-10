@@ -7,7 +7,7 @@
 #ifndef _AV6_EXEC_H_
 #define _AV6_EXEC_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 /*
  * Maximum size of a path string passed to exec() and other path-taking

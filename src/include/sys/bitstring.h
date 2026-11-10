@@ -15,7 +15,7 @@
 #ifndef _AV6_BITSTRING_H_
 #define _AV6_BITSTRING_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 typedef uint64 bitstr_t;
 

@@ -24,8 +24,8 @@
 #ifndef _AV6_KTEST_H_
 #define _AV6_KTEST_H_
 
-#include "sys/string.h"
-#include "sys/types.h"
+#include <sys/string.h>
+#include <sys/types.h>
 
 /* The case halts the kernel and reports nothing. Run by name, one per boot. */
 #define KTEST_NORETURN 0x01

@@ -8,10 +8,10 @@
  * Test suite for the slab allocator
  */
 
-#include "sys/string.h"
-#include "sys/types.h"
-#include "tests/ktest.h"
-#include "vm/kmem.h"
+#include <sys/string.h>
+#include <sys/types.h>
+#include <tests/ktest.h>
+#include <vm/kmem.h>
 
 static void kmem_cache_reclaim_cycle(struct ktest *t)
 {

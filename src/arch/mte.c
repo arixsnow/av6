@@ -11,10 +11,10 @@
  * it here when userland can opt in.
  */
 
-#include "arch/mte.h"
-#include "arch/arm64.h"
-#include "sys/kio.h"
-#include "sys/types.h"
+#include <arch/mte.h>
+#include <arch/arm64.h>
+#include <sys/kio.h>
+#include <sys/types.h>
 
 /*
  * Arm EL0 tag checking. EL1 is left unchecked: the DMAP is MT_NORMAL and TCF

@@ -7,7 +7,7 @@
 #ifndef _AV6_ELF_H_
 #define _AV6_ELF_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 /*
  * elf.h - ELF64 binary format constants and structures (AArch64 subset)

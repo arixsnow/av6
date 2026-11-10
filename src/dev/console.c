@@ -11,18 +11,18 @@
  * echo, and input buffering. Output goes straight to uart_putc.
  */
 
-#include "dev/console.h"
-#include "arch/arm64.h"
-#include "arch/platform.h"
-#include "dev/uart.h"
-#include "sys/fmt.h"
-#include "sys/intr.h"
-#include "sys/kio.h"
-#include "sys/kmsg.h"
-#include "sys/param.h"
-#include "sys/proc.h"
-#include "sys/spinlock.h"
-#include "sys/types.h"
+#include <dev/console.h>
+#include <arch/arm64.h>
+#include <arch/platform.h>
+#include <dev/uart.h>
+#include <sys/fmt.h>
+#include <sys/intr.h>
+#include <sys/kio.h>
+#include <sys/kmsg.h>
+#include <sys/param.h>
+#include <sys/proc.h>
+#include <sys/spinlock.h>
+#include <sys/types.h>
 
 /*
  * Short History lesson:

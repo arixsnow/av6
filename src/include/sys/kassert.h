@@ -14,8 +14,8 @@
 #ifndef _AV6_KASSERT_H_
 #define _AV6_KASSERT_H_
 
-#include "sys/kio.h"
-#include "sys/types.h"
+#include <sys/kio.h>
+#include <sys/types.h>
 
 #define CTASSERT(exp, msg) _Static_assert(exp, msg)
 

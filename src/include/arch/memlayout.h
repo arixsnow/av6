@@ -7,7 +7,7 @@
 #ifndef _AV6_MEMLAYOUT_H_
 #define _AV6_MEMLAYOUT_H_
 
-#include "arch/assym.h"
+#include <arch/assym.h>
 
 /*
  * AArch64 virtual address space split (48-bit VA, TBI enabled)

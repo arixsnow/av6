@@ -26,15 +26,15 @@
  * silently succeeding.
  */
 
-#include "sys/syscall.h"
-#include "arch/copy.h"
-#include "arch/trapframe.h"
-#include "dev/console.h"
-#include "sys/exec.h"
-#include "sys/kassert.h"
-#include "sys/kio.h"
-#include "sys/proc.h"
-#include "sys/types.h"
+#include <sys/syscall.h>
+#include <arch/copy.h>
+#include <arch/trapframe.h>
+#include <dev/console.h>
+#include <sys/exec.h>
+#include <sys/kassert.h>
+#include <sys/kio.h>
+#include <sys/proc.h>
+#include <sys/types.h>
 
 /* Max bytes copied per copyin round-trip inside sys_write. */
 #define WRITE_BOUNCE_SZ 128

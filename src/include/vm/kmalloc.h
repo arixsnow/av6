@@ -14,7 +14,7 @@
 #ifndef _AV6_KMALLOC_H_
 #define _AV6_KMALLOC_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 #define ZERO_SIZE_PTR       ((void *)16)
 #define ZERO_OR_NULL_PTR(x) ((uintptr)(x) <= (uintptr)ZERO_SIZE_PTR)

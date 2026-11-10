@@ -15,9 +15,9 @@
 #ifndef _AV6_CPUMASK_H_
 #define _AV6_CPUMASK_H_
 
-#include "sys/bitstring.h"
-#include "sys/param.h"
-#include "sys/types.h"
+#include <sys/bitstring.h>
+#include <sys/param.h>
+#include <sys/types.h>
 
 struct cpumask {
     bitstr_t bits[BITSTR_NWORDS(NCPU_MAX)];

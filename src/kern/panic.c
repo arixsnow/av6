@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "arch/arm64.h"
-#include "arch/cpu.h"
-#include "arch/dtb.h"
-#include "arch/gic.h"
-#include "arch/stdarg.h"
-#include "dev/console.h"
-#include "sys/fmt.h"
-#include "sys/kio.h"
-#include "sys/kmsg.h"
-#include "sys/proc.h"
-#include "sys/types.h"
+#include <arch/arm64.h>
+#include <arch/cpu.h>
+#include <arch/dtb.h>
+#include <arch/gic.h>
+#include <arch/stdarg.h>
+#include <dev/console.h>
+#include <sys/fmt.h>
+#include <sys/kio.h>
+#include <sys/kmsg.h>
+#include <sys/proc.h>
+#include <sys/types.h>
 
 #define PANIC_CPU_NONE (~0UL)
 

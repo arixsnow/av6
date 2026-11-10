@@ -8,8 +8,8 @@
  * Cases for the framework itself.
  */
 
-#include "sys/types.h"
-#include "tests/ktest.h"
+#include <sys/types.h>
+#include <tests/ktest.h>
 
 static void ktest_expect_continues(struct ktest *t)
 {

@@ -15,10 +15,10 @@
  * bounds for free.
  */
 
-#include "sys/fdt.h"
-#include "sys/kio.h"
-#include "sys/string.h"
-#include "sys/types.h"
+#include <sys/fdt.h>
+#include <sys/kio.h>
+#include <sys/string.h>
+#include <sys/types.h>
 
 #define FDT_MAGIC                   0xD00DFEED
 #define FDT_BEGIN_NODE              0x00000001

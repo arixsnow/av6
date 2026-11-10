@@ -7,12 +7,12 @@
 #ifndef _AV6_PROC_H_
 #define _AV6_PROC_H_
 
-#include "arch/cpu.h"
-#include "arch/trapframe.h"
-#include "sys/list.h"
-#include "sys/param.h"
-#include "sys/spinlock.h"
-#include "sys/types.h"
+#include <arch/cpu.h>
+#include <arch/trapframe.h>
+#include <sys/list.h>
+#include <sys/param.h>
+#include <sys/spinlock.h>
+#include <sys/types.h>
 
 enum procstate {
     UNUSED,

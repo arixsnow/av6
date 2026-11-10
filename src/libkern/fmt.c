@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "sys/fmt.h"
-#include "arch/stdarg.h"
-#include "sys/types.h"
+#include <sys/fmt.h>
+#include <arch/stdarg.h>
+#include <sys/types.h>
 
 #define FMT_ALT  0x01
 #define FMT_ZERO 0x02

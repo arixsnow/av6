@@ -7,7 +7,7 @@
 #ifndef _AV6_GIC_H_
 #define _AV6_GIC_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 /*
  * GICv3 - Generic Interrupt Controller v3

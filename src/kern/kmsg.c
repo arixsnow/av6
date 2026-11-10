@@ -17,14 +17,14 @@
  * "overwritten" from "nothing new".
  */
 
-#include "sys/kmsg.h"
-#include "arch/arm64.h"
-#include "arch/cpu.h"
-#include "dev/uart.h"
-#include "sys/kio.h"
-#include "sys/proc.h"
-#include "sys/spinlock.h"
-#include "sys/types.h"
+#include <sys/kmsg.h>
+#include <arch/arm64.h>
+#include <arch/cpu.h>
+#include <dev/uart.h>
+#include <sys/kio.h>
+#include <sys/proc.h>
+#include <sys/spinlock.h>
+#include <sys/types.h>
 
 static struct spinlock kmsg_lock;
 

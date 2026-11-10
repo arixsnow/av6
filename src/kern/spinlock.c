@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "sys/spinlock.h"
-#include "arch/arm64.h"
-#include "arch/cpu.h"
-#include "sys/kassert.h"
-#include "sys/kio.h"
-#include "sys/types.h"
+#include <sys/spinlock.h>
+#include <arch/arm64.h>
+#include <arch/cpu.h>
+#include <sys/kassert.h>
+#include <sys/kio.h>
+#include <sys/types.h>
 
 void push_off_at(const char *file, int line)
 {

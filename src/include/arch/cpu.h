@@ -7,8 +7,8 @@
 #ifndef _AV6_CPU_H_
 #define _AV6_CPU_H_
 
-#include "sys/param.h"
-#include "sys/types.h"
+#include <sys/param.h>
+#include <sys/types.h>
 
 struct proc;
 

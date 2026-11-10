@@ -8,10 +8,10 @@
  * Test suite for interrupt source registration.
  */
 
-#include "arch/gic.h"
-#include "sys/intr.h"
-#include "sys/types.h"
-#include "tests/ktest.h"
+#include <arch/gic.h>
+#include <sys/intr.h>
+#include <sys/types.h>
+#include <tests/ktest.h>
 
 static int stub_filter(void)
 {

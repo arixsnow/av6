@@ -7,7 +7,7 @@
 #ifndef _AV6_CONSOLE_H_
 #define _AV6_CONSOLE_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 void console_init(void);
 void console_config(void);

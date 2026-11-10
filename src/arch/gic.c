@@ -17,14 +17,14 @@
  *      gic_inithart()  - all CPUs, sets up per-CPU GICR + ICC
  */
 
-#include "arch/gic.h"
-#include "arch/arm64.h"
-#include "arch/dtb.h"
-#include "arch/memlayout.h"
-#include "arch/mmio.h"
-#include "arch/platform.h"
-#include "sys/kio.h"
-#include "sys/types.h"
+#include <arch/gic.h>
+#include <arch/arm64.h>
+#include <arch/dtb.h>
+#include <arch/memlayout.h>
+#include <arch/mmio.h>
+#include <arch/platform.h>
+#include <sys/kio.h>
+#include <sys/types.h>
 
 /* GICD (Distributor) - one per system */
 #define GICD_CTLR               0x000

@@ -7,7 +7,7 @@
 #ifndef _AV6_PLATFORM_H_
 #define _AV6_PLATFORM_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 struct platform {
     uintptr uart_base; /* PL011 UART MMIO base (PA) */

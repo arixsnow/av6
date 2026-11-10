@@ -7,8 +7,8 @@
 #ifndef _AV6_MTE_H_
 #define _AV6_MTE_H_
 
-#include "arch/sysreg.h"
-#include "sys/types.h"
+#include <arch/sysreg.h>
+#include <sys/types.h>
 
 /*
  * MTE - Memory Tagging Extension (ARMv8.5)

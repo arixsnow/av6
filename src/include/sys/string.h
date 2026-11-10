@@ -7,7 +7,7 @@
 #ifndef _AV6_STRING_H_
 #define _AV6_STRING_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 void *memset(void *dst, uchar c, uint64 n);
 void *memcpy(void *dst, const void *src, uint64 n);

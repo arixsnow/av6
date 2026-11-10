@@ -8,11 +8,11 @@
  * Test suite for the kernel message ring.
  */
 
-#include "dev/console.h"
-#include "sys/kio.h"
-#include "sys/kmsg.h"
-#include "sys/types.h"
-#include "tests/ktest.h"
+#include <dev/console.h>
+#include <sys/kio.h>
+#include <sys/kmsg.h>
+#include <sys/types.h>
+#include <tests/ktest.h>
 
 static void kmsg_seq_contiguous(struct ktest *t)
 {

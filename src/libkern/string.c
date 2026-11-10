@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "sys/string.h"
+#include <sys/string.h>
 
 void *memset(void *dst, uchar c, uint64 n)
 {

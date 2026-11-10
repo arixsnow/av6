@@ -18,8 +18,8 @@
 #ifndef _AV6_FMT_H_
 #define _AV6_FMT_H_
 
-#include "arch/stdarg.h"
-#include "sys/types.h"
+#include <arch/stdarg.h>
+#include <sys/types.h>
 
 int vsnprintf(char *buf, uint64 size, const char *fmt, va_list ap);
 int snprintf(char *buf, uint64 size, const char *fmt, ...);

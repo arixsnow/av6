@@ -8,10 +8,10 @@
  * Receive-fault classification
  */
 
-#include "dev/console.h"
-#include "dev/uart.h"
-#include "sys/types.h"
-#include "tests/ktest.h"
+#include <dev/console.h>
+#include <dev/uart.h>
+#include <sys/types.h>
+#include <tests/ktest.h>
 
 static void console_rx_error_reports_the_cause(struct ktest *t)
 {

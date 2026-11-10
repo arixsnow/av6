@@ -8,10 +8,10 @@
  * Check assym.h against the structs it describes
  */
 
-#include "arch/assym.h"
-#include "arch/cpu.h"
-#include "arch/trapframe.h"
-#include "sys/kassert.h"
+#include <arch/assym.h>
+#include <arch/cpu.h>
+#include <arch/trapframe.h>
+#include <sys/kassert.h>
 
 CTASSERT(offsetof(struct trapframe, x) == TF_X0, "TF_X0");
 CTASSERT(offsetof(struct trapframe, x[30]) == TF_X30, "TF_X30");

@@ -18,7 +18,7 @@
 #ifndef _AV6_KMSG_H_
 #define _AV6_KMSG_H_
 
-#include "sys/types.h"
+#include <sys/types.h>
 
 /*
  * TEXTSZ is the number to tune. NDESC follows from it

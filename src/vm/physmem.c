@@ -21,10 +21,10 @@
  * exclusions grow to whole pages. Both err towards handing out less.
  */
 
-#include "vm/physmem.h"
-#include "arch/mmu.h"
-#include "sys/kio.h"
-#include "sys/types.h"
+#include <vm/physmem.h>
+#include <arch/mmu.h>
+#include <sys/kio.h>
+#include <sys/types.h>
 
 static struct region hwregions[MAX_HWCNT];
 static struct region exregions[MAX_EXCNT];
