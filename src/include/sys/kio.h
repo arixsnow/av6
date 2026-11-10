@@ -8,6 +8,7 @@
 #define _AV6_KIO_H_
 
 #include <arch/stdarg.h>
+#include <sys/cdefs.h>
 
 /*
  * Log levels - lower number = more urgent. Carried per message
@@ -25,8 +26,9 @@
 #define KERN_CONT    8
 
 void printk_init(void);
-void printk_level(int level, const char *format, ...);
-void printk(const char *format, ...); /* shorthand for KERN_INFO */
+void printk_level(int level, const char *format, ...) __printflike(2, 3);
+/* shorthand for KERN_INFO */
+void printk(const char *format, ...) __printflike(1, 2);
 
 #define pr_emerg(...)  printk_level(KERN_EMERG, __VA_ARGS__)
 #define pr_alert(...)  printk_level(KERN_ALERT, __VA_ARGS__)
@@ -37,10 +39,10 @@ void printk(const char *format, ...); /* shorthand for KERN_INFO */
 #define pr_info(...)   printk_level(KERN_INFO, __VA_ARGS__)
 #define pr_debug(...)  printk_level(KERN_DEBUG, __VA_ARGS__)
 
-void vprintk(int level, const char *format, va_list arglist);
+void vprintk(int level, const char *format, va_list arglist) __printflike(2, 0);
 
-void panic(const char *format, ...) __attribute__((noreturn));
-void panic_stop_self(void) __attribute__((noreturn));
+void panic(const char *format, ...) __noreturn __printflike(1, 2);
+void panic_stop_self(void) __noreturn;
 int panic_in_progress(void);
 
 /*

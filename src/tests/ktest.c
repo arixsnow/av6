@@ -53,7 +53,7 @@ void ktest_init(struct ktest *t, const char *name, uint32 index)
     *t = (struct ktest){.name = name, .index = index};
 }
 
-static void ktest_log(const char *fmt, ...)
+static __printflike(1, 2) void ktest_log(const char *fmt, ...)
 {
     va_list ap;
     int n;

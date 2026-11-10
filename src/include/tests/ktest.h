@@ -51,8 +51,8 @@ struct ktest_case {
 void ktest_init(struct ktest *t, const char *name, uint32 index);
 int64 ktest_memdiff(const void *a, const void *b, uint64 n);
 void ktest_bad(struct ktest *t, const char *file, int lineno, const char *fmt,
-    ...);
-void ktest_note(struct ktest *t, const char *fmt, ...);
+    ...) __printflike(4, 5);
+void ktest_note(struct ktest *t, const char *fmt, ...) __printflike(2, 3);
 void ktest_expect_output(struct ktest *t, const char *text);
 void ktest_run_all(void);
 

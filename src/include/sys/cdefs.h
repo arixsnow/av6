@@ -11,7 +11,10 @@
 #ifndef _AV6_CDEFS_H_
 #define _AV6_CDEFS_H_
 
-#define __unused __attribute__((__unused__))
+#define __unused   __attribute__((__unused__))
+#define __noreturn __attribute__((__noreturn__))
+#define __printflike(fmtarg, firstvararg) \
+    __attribute__((__format__(__printf__, fmtarg, firstvararg)))
 
 /* Hints only: both return the expression unchanged */
 #define __predict_true(exp)    __builtin_expect((exp), 1)

@@ -58,6 +58,9 @@ AlignConsecutiveMacros:
   AlignFunctionPointers: false
   PadOperators: true
 SpaceBeforeParens: ControlStatementsExceptControlMacros
+AttributeMacros:
+  - __noreturn
+  - __printflike
 ForEachMacros:
   - LIST_FOREACH
   - LIST_FOREACH_SAFE
