@@ -1,5 +1,5 @@
-# Commits that change only layout or comment text. git blame skips
-# them and shows the commit that last changed each line.
+# Commits that change only layout, comments or include style. git blame
+# skips them and shows the commit that last changed each line.
 #
 # Use git blame --ignore-revs-file .git-blame-ignore-revs, or once
 # per clone: git config blame.ignoreRevsFile .git-blame-ignore-revs
@@ -7,6 +7,10 @@
 #
 # Newest first.
 
+# treewide: include kernel headers with angle brackets
+f4cc0c26b9c5628d6af0f134d38388b86ef723a2
+# treewide: use SPDX license identifiers
+34d75f4ab2b5f05e526e5d282e89c97a848cf15a
 # treewide: reformat with clang-format
 36be3188d74d09be13189e600b38297cbcc10358
 # treewide: keep lines within 80 columns
