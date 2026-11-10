@@ -8,8 +8,8 @@
  * argvtest.s : exec(2) argv self-test program
  */
 
- /* Syscall numbers */
- .include "syscall_nr.s"
+/* Syscall numbers */
+.include "syscall_nr.s"
 
 .section .text
 .global _start

@@ -81,6 +81,46 @@ while IFS= read -r -d '' f; do
     }
 done < <(git ls-files -z)
 
+git grep -Ilz '' |
+    LC_ALL=C xargs -0 -r awk '
+    FNR == 1 {
+        inc = 0
+        indent4 = FILENAME ~ /\.(s|sh|ld|lds)$/
+        tabs = FILENAME ~ /(^|\/)Makefile$|\.mk$/
+    }
+    /\r/ { printf "%s:%d: CRLF line ending\n", FILENAME, FNR; bad = 1; next }
+    /[ \t]+$/ { printf "%s:%d: trailing whitespace\n", FILENAME, FNR; bad = 1 }
+    indent4 {
+        if ($0 ~ /^[ \t]*\/\*/)
+            inc = 1
+        c = inc
+        if ($0 ~ /\*\//)
+            inc = 0
+        if (!c && match($0, /^ +[^ ]/) && (RLENGTH - 1) % 4) {
+            printf "%s:%d: indent is not a multiple of 4\n", FILENAME, FNR
+            bad = 1
+        }
+    }
+    tabs && /^ +[^ ]/ {
+        printf "%s:%d: make file line indented with spaces\n", FILENAME, FNR
+        bad = 1
+    }
+    END { exit bad }' || status=1
+
+utf8=$(git grep -Ilz '' | LC_ALL=C.UTF-8 xargs -0 -r grep -Hnaxv '.*')
+if [ -n "$utf8" ]; then
+    printf '%s\n' "$utf8" | sed 's/^\([^:]*:[0-9]*\):.*/\1: not UTF-8/'
+    status=1
+fi
+
+while IFS= read -r -d '' f; do
+    case $(tail -c 2 "$f" | od -An -tx1 | tr -d ' \n') in
+    *0a0a) echo "$f: blank line at end of file" >&2; status=1 ;;
+    *0a) ;;
+    *) echo "$f: no newline at end of file" >&2; status=1 ;;
+    esac
+done < <(git grep -Ilz '')
+
 git ls-files -z '*.c' '*.h' '*.s' '*.ld' '*.lds' |
     LC_ALL=C.UTF-8 xargs -0 -r awk '
     BEGIN { sq = "\047" }
