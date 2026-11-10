@@ -121,7 +121,7 @@ $(BUILDDIR)/%.o : $(SRCDIR)/%.s
 
 -include $(KDEPS)
 
-.PHONY : all build clean distclean run check check-run FORCE
+.PHONY : all build clean distclean run check check-run check-style FORCE
 .DELETE_ON_ERROR :
 
 clean : RMDIRS := $(BUILDDIR)
@@ -152,3 +152,7 @@ check:
 check-run: build
 	$(Q)test -n "$(KTEST)" || { echo '  check-run is internal, use: make check'; exit 1; }
 	$(Q)tools/runtests.sh $(if $(SCENARIO),--scenario $(SCENARIO)) $(BINNAME) $(CPUS) $(MEM)
+
+# Fail on source layout the style rules reject.
+check-style:
+	$(Q)tools/check-style.sh
