@@ -52,7 +52,7 @@ static struct proc_runq runq;                     /* RUNNABLE procs, FIFO */
 static struct spinlock ptable_lock; /* protects alloc + pidhash */
 static struct spinlock runq_lock;   /* protects runq */
 static struct spinlock pid_lock;    /* protects pidmap */
-struct spinlock wait_lock;          /* protects proc->parent */
+static struct spinlock wait_lock;   /* protects proc->parent */
 
 static bit_decl(pidmap, KSTACK_NSLOTS); /* 1 = pid in use, pid 0 is reserved */
 

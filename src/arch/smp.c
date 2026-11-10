@@ -15,6 +15,7 @@
 #include <arch/arm64.h>
 #include <arch/cpu.h>
 #include <arch/dtb.h>
+#include <arch/entry.h>
 #include <arch/gic.h>
 #include <arch/memlayout.h>
 #include <arch/pmap.h>
@@ -35,9 +36,6 @@
 struct cpu cpus[NCPU_MAX];
 
 extern void mpentry(void);
-
-/* Called from entry.s */
-void mpboot(void);
 
 static int64 psci_call(uint64 fn, uint64 arg0, uint64 arg1, uint64 arg2)
 {

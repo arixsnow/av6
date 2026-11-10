@@ -14,6 +14,7 @@
  */
 
 #include <arch/arm64.h>
+#include <arch/entry.h>
 #include <arch/gic.h>
 #include <arch/mte.h>
 #include <arch/sysreg.h>
@@ -25,15 +26,6 @@
 #include <sys/proc.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
-
-/* Called from vectors.s */
-void trap_sync(struct trapframe *tf, uint64 esr, uint64 far);
-void trap_irq(void);
-void usertrap_sync(struct trapframe *tf, uint64 esr, uint64 far);
-void trap_unknown(uint64 esr, uint64 elr, uint64 far);
-void handle_stack_overflow(uint64 sp);
-void trap_serror(struct trapframe *tf, uint64 esr, uint64 far);
-void trap_fiq(struct trapframe *tf, uint64 esr, uint64 far);
 
 /*
  * Exception Class (EC) values from ESR_EL1[31:26]

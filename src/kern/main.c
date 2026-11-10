@@ -7,6 +7,7 @@
 #include <arch/arm64.h>
 #include <arch/asid.h>
 #include <arch/dtb.h>
+#include <arch/entry.h>
 #include <arch/gic.h>
 #include <arch/pmap.h>
 #include <arch/smp.h>
@@ -23,9 +24,6 @@
 #ifdef AV6_KTEST
 #include <tests/ktest.h>
 #endif
-
-/* Called from entry.s */
-void boot_init(void *dtb);
 
 void boot_init(void *dtb)
 {
