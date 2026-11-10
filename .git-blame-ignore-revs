@@ -1,0 +1,13 @@
+# Commits that change only layout or comment text. git blame skips
+# them and shows the commit that last changed each line.
+#
+# Use git blame --ignore-revs-file .git-blame-ignore-revs, or once
+# per clone: git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub's blame view reads this file on its own.
+#
+# Newest first.
+
+# treewide: reformat with clang-format
+36be3188d74d09be13189e600b38297cbcc10358
+# treewide: keep lines within 80 columns
+a16d35305b69ccbf21a3cb4356eb508c35aa0774
