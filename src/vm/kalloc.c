@@ -191,7 +191,7 @@ void kpage_free(char *vaddr)
 
     KASSERT(pg->flags == PG_USED || pg->flags == PG_SLAB,
         "kpage_free: %#lx not allocated (flags %d)", pa, pg->flags);
-    KASSERT(pg->refcnt == 1, "kfree: %#lx bad refcnt %d", pg, pg->refcnt);
+    KASSERT(pg->refcnt == 1, "kfree: %#lx bad refcnt %d", pa, pg->refcnt);
 
     pg->flags = PG_FREE;
     pg->refcnt = 0;

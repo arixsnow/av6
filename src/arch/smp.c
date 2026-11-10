@@ -100,7 +100,7 @@ void smp_init(void)
         ret = psci_call(PSCI_CPU_ON, cpu_mpidr[i], KVA_TO_PA((uint64)mpentry),
             i);
         if (ret != 0) {
-            pr_warn("smp: CPU %d PSCI CPU_ON failed (error %d)\n", i, ret);
+            pr_warn("smp: CPU %d PSCI CPU_ON failed (error %ld)\n", i, ret);
             continue;
         }
 

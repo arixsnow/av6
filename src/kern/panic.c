@@ -109,7 +109,7 @@ static void panic_report_stuck(void)
 
         p = cpus[i].proc;
         printk_level(KERN_EMERG,
-            "PANIC: cpu%d still running %s (state=%d noff=%d intena=%d lr=%p off=%s:%d)\n",
+            "PANIC: cpu%d still running %s (state=%d noff=%d intena=%d lr=0x%016lx off=%s:%d)\n",
             i, (p != NULL) ? p->name : "scheduler",
             (p != NULL) ? (int)p->state : -1, cpus[i].noff, cpus[i].intena,
             (p != NULL) ? p->context.x30 : 0,

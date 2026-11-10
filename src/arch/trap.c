@@ -99,27 +99,27 @@ void trap_sync(struct trapframe *tf, uint64 esr, uint64 far)
                 return;
             }
 
-            printk("Data Abort at ELR=%p, FAR=%p, ISS=%#x\n", tf->elr, far,
-                iss);
+            printk("Data Abort at ELR=0x%016lx, FAR=0x%016lx, ISS=%#x\n",
+                tf->elr, far, iss);
             panic("data abort");
             break;
 
         case EC_IABT_EL1:
-            printk("Instruction Abort at ELR=%p, FAR=%p, ISS=%#x\n", tf->elr,
-                far, iss);
+            printk("Instruction Abort at ELR=0x%016lx, FAR=0x%016lx, ISS=%#x\n",
+                tf->elr, far, iss);
             panic("instruction abort");
             break;
 
         case EC_SVC64:
-            printk("SVC from Kernel (unexpected), ESR=%p, ELR=%p\n", esr,
-                tf->elr);
+            printk("SVC from Kernel (unexpected), ESR=0x%016lx, ELR=0x%016lx\n",
+                esr, tf->elr);
             panic("unexpected svc");
             break;
 
         default:
             printk("Sync Exception: EC=%#x, ISS=%#x\n", ec, iss);
-            printk("    ELR=%p (faulting instruction)\n", tf->elr);
-            printk("    FAR=%p (fault address)\n", far);
+            printk("    ELR=0x%016lx (faulting instruction)\n", tf->elr);
+            printk("    FAR=0x%016lx (fault address)\n", far);
             panic("unhandled sync exception");
             break;
     }
@@ -206,16 +206,16 @@ void usertrap_sync(struct trapframe *tf, uint64 esr, uint64 far)
             break;
         case EC_DABT_EL0:
             if ((iss & ESR_ISS_DFSC_MASK) == DFSC_TAG_CHECK) {
-                printk("kill: pid %d MTE tag-check fault, ELR=%p, FAR=%p\n",
+                printk("kill: pid %d MTE tag-check fault, ELR=0x%016lx, FAR=0x%016lx\n",
                     myproc()->pid, tf->elr, far);
             } else {
-                printk("kill: pid %d data abort ELR=%p, FAR=%p, ISS=%#x\n",
+                printk("kill: pid %d data abort ELR=0x%016lx, FAR=0x%016lx, ISS=%#x\n",
                     myproc()->pid, tf->elr, far, iss);
             }
             exit(-1);
             break;
         case EC_IABT_EL0:
-            printk("kill: pid %d instruction abort ELR=%p, FAR=%p\n",
+            printk("kill: pid %d instruction abort ELR=0x%016lx, FAR=0x%016lx\n",
                 myproc()->pid, tf->elr, far);
             exit(-1);
             break;
@@ -224,7 +224,7 @@ void usertrap_sync(struct trapframe *tf, uint64 esr, uint64 far)
              * Illegal/undefined instruction or any other EL0 sync trap: the
              * process did something it can't, so terminate it.
              */
-            printk("kill: pid %d illegal sync exception, EC=%#x, ELR=%p, FAR=%p\n",
+            printk("kill: pid %d illegal sync exception, EC=%#x, ELR=0x%016lx, FAR=0x%016lx\n",
                 myproc()->pid, ec, tf->elr, far);
             exit(-1);
             break;
@@ -273,9 +273,9 @@ void usertrapret(void)
 void trap_unknown(uint64 esr, uint64 elr, uint64 far)
 {
     printk("Unhandled Exception!\n");
-    printk("    ESR=%p\n", esr);
-    printk("    ELR=%p\n", elr);
-    printk("    FAR=%p\n", far);
+    printk("    ESR=0x%016lx\n", esr);
+    printk("    ELR=0x%016lx\n", elr);
+    printk("    FAR=0x%016lx\n", far);
     panic("unhandled exception");
 }
 
@@ -300,8 +300,8 @@ void handle_stack_overflow(uint64 sp)
     printk("\n=== KERNEL STACK OVERFLOW ===\n");
     printk("cpu %d, pid %d (%s)\n", (int)cpuid(), p ? p->pid : -1,
         p ? p->name : "<none>");
-    printk("    kernel SP = %p (overflowed into the guard)\n", sp);
-    printk("    ELR = %p ESR = %p FAR = %p\n", elr, esr, far);
+    printk("    kernel SP = 0x%016lx (overflowed into the guard)\n", sp);
+    printk("    ELR = 0x%016lx ESR = 0x%016lx FAR = 0x%016lx\n", elr, esr, far);
     panic("kernel stack overflow");
 }
 
@@ -335,12 +335,14 @@ void trap_serror(struct trapframe *tf, uint64 esr, uint64 far)
         return;
     }
 
-    printk("SError at ELR=%p, FAR=%p, ESR=%p\n", tf->elr, far, esr);
+    printk("SError at ELR=0x%016lx, FAR=0x%016lx, ESR=0x%016lx\n", tf->elr, far,
+        esr);
     panic("uncontainable system error");
 }
 
 void trap_fiq(struct trapframe *tf, uint64 esr, uint64 far)
 {
-    printk("FIQ at ELR=%p, FAR=%p, ESR=%p\n", tf->elr, far, esr);
+    printk("FIQ at ELR=0x%016lx, FAR=0x%016lx, ESR=0x%016lx\n", tf->elr, far,
+        esr);
     panic("unexpected FIQ");
 }

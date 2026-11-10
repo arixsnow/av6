@@ -51,7 +51,7 @@ void timer_init(void)
     intr_register(platform.timer_irq, "timer", timer_tick, NULL);
 
     if (cpuid() == 0) {
-        printk("timer: freq=%d Hz, interval=%d ticks (%d Hz)\n", freq,
+        printk("timer: freq=%lu Hz, interval=%lu ticks (%d Hz)\n", freq,
             timer_interval, TIMER_HZ);
     }
 }
