@@ -170,7 +170,8 @@ void ktest_run_all(void)
     uint64 freq, us, started;
     uint32 total, n, i, pass, fail, skip;
 
-    total = (uint32)(__ktest_end - __ktest_start);
+    total = (uint32)(((uintptr)__ktest_end - (uintptr)__ktest_start)
+        / sizeof(*__ktest_start));
     freq = read_cntfrq();
     pass = 0;
     fail = 0;

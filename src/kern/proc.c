@@ -310,7 +310,7 @@ void userinit(void)
         panic("userinit: uvmcreate failed");
     }
 
-    elf_size = (uint64)(init_elf_end - init_elf_start);
+    elf_size = (uintptr)init_elf_end - (uintptr)init_elf_start;
     if (loadelf(p->pagetable, init_elf_start, elf_size, &entry, &sz) < 0) {
         panic("userinit: loadelf failed");
     }

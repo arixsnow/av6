@@ -300,7 +300,7 @@ int exec(const char *path, uintptr uargv)
         return -1;
     }
 
-    elf_size = (uint64)(elf_end - elf_start);
+    elf_size = (uintptr)elf_end - (uintptr)elf_start;
     if (loadelf(new_pagetable, elf_start, elf_size, &entry, &new_sz) < 0) {
         uvmfree(new_pagetable);
         return -1;
