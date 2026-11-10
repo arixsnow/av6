@@ -46,6 +46,41 @@ case $? in
 *) status=1 ;;
 esac
 
+spdx='SPDX-License-Identifier: BSD-3-Clause'
+copyright='Copyright [(]c[)] [0-9]{4}(-[0-9]{4})?, [^ ]'
+
+while IFS= read -r -d '' f; do
+    case $f in
+    LICENSE | README.md | .gitignore | .git-blame-ignore-revs) continue ;;
+    *.c | *.h | *.s | *.ld | *.lds) style='block' ;;
+    *.sh | *.mk | Makefile | .clang-format | .editorconfig) style='hash' ;;
+    *)
+        echo "$f: no license header rule for this kind of file" >&2
+        status=1
+        continue
+        ;;
+    esac
+    awk -v style="$style" -v spdx="$spdx" -v copy="$copyright" '
+        NR == 1 && style == "hash" && /^#!/ { off = 1; next }
+        { n = NR - off }
+        style == "block" {
+            if (n == 1) ok = ($0 == "/*")
+            if (n == 2) ok = ok && ($0 ~ "^ [*] " copy)
+            if (n == 3) ok = ok && ($0 == " *")
+            if (n == 4) ok = ok && ($0 == " * " spdx)
+            if (n == 5) { ok = ok && ($0 == " */"); done = 1; exit }
+        }
+        style == "hash" {
+            if (n == 1) ok = ($0 ~ "^# " copy)
+            if (n == 2) ok = ok && ($0 == "#")
+            if (n == 3) { ok = ok && ($0 == "# " spdx); done = 1; exit }
+        }
+        END { exit !(ok && done) }' "$f" || {
+        echo "$f: license header is not the copyright and SPDX block" >&2
+        status=1
+    }
+done < <(git ls-files -z)
+
 git ls-files -z '*.c' '*.h' '*.s' '*.ld' '*.lds' |
     LC_ALL=C.UTF-8 xargs -0 -r awk '
     BEGIN { sq = "\047" }
