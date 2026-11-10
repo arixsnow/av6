@@ -95,11 +95,12 @@ include $(USERDIR)/user.mk
 .DEFAULT_GOAL := build
 
 build :
-	@$(MAKE) $(if $(filter 1,$(V)),, -s) --no-print-directory $(BINNAME) \
+	@$(MAKE) $(if $(filter 1,$(V)),, -s) --no-print-directory \
+	        $(CCJSON) $(BINNAME) \
 	        && echo '  BUILD   $(BINNAME)  ready' \
 			|| { echo '  BUILD   FAILED'; exit 1; }
 
-all : $(BINNAME)
+all : $(CCJSON) $(BINNAME)
 
 $(BINNAME) : $(ELFNAME)
 	$(E) '  OBJCOPY   $@'
@@ -118,6 +119,33 @@ $(BUILDDIR)/%.o : $(SRCDIR)/%.s
 	@mkdir -p $(dir $@)
 	$(E) '  AS        $@'
 	$(Q)$(CC) $(CFLAGS) -o $@ -c $<
+
+# The command the C rule above runs for each source, for clangd and
+# clang-tidy. Rewritten on every build, replaced only when it changes.
+CCJSON := $(BUILDDIR)/compile_commands.json
+
+comma := ,
+empty :=
+space := $(empty) $(empty)
+json_list = $(subst $(space),$(comma),$(patsubst %,"%",$(1)))
+json_obj = $(1:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
+json_argv = $(call json_list,$(CC) $(CFLAGS) -o $(call json_obj,$(1)) -c $(1))
+json_file = "directory":"$(CURDIR)","file":"$(1)"
+json_entry = {$(call json_file,$(1)),"arguments":[$(call json_argv,$(1))]}
+json_unsafe = $(findstring ",$(1))$(findstring \,$(1))$(findstring ',$(1))
+json_fatal = $(error $(CCJSON): $(1) needs JSON quoting)
+
+CCJSON_ENTRIES := $(foreach s,$(sort $(KSRC_C)),$(call json_entry,$(s)))
+CCJSON_LAST := $(lastword $(CCJSON_ENTRIES))
+CCJSON_REST := $(filter-out $(CCJSON_LAST),$(CCJSON_ENTRIES))
+
+$(CCJSON) : FORCE
+	$(if $(call json_unsafe,$(CFLAGS)),$(call json_fatal,CFLAGS))
+	$(if $(call json_unsafe,$(CURDIR)$(space)),$(call json_fatal,the path))
+	@mkdir -p $(@D)
+	@printf '%s\n' '[' $(patsubst %,'%$(comma)',$(CCJSON_REST)) \
+		'$(CCJSON_LAST)' ']' > $@.tmp
+	@if cmp -s $@ $@.tmp; then rm -f $@.tmp; else mv -f $@.tmp $@; fi
 
 -include $(KDEPS)
 
