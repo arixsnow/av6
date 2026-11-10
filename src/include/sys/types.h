@@ -35,8 +35,12 @@ typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
 
+#if __STDC_VERSION__ < 202311L
 #define true  1
 #define false 0
-#define NULL  ((void *)0)
+typedef _Bool bool;
+#endif
+
+#define NULL ((void *)0)
 
 #endif /* _AV6_TYPES_H_ */

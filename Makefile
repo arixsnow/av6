@@ -43,9 +43,9 @@ NCPU_MAX ?= 32
 CONFIG_H := $(BUILDDIR)/include/av6_config.h
 ASSYM_S := $(BUILDDIR)/include/assym.s
 
-CFLAGS := -Wall -Wextra -ffreestanding -nostdlib -mgeneral-regs-only \
-			-march=armv9-a+memtag -I $(INCLDIR) -I $(BUILDDIR)/include \
-			-include av6_config.h -MMD -MP
+CFLAGS := -std=gnu17 -Wall -Wextra -ffreestanding -nostdinc -nostdlib \
+			-mgeneral-regs-only -march=armv9-a+memtag -I $(INCLDIR) \
+			-I $(BUILDDIR)/include -include av6_config.h -MMD -MP
 LDFLAGS := -nostdlib -T $(SRCDIR)/kernel.ld --defsym=NCPU_MAX=$(NCPU_MAX)
 
 BINNAME := $(BUILDDIR)/$(NAME).bin
