@@ -28,9 +28,9 @@ static int sw_err;
 
 static void sw_data(const void *p, uint32 len)
 {
-    uint32 words = (len + 3) >> 2;
+    uint32 words = (len >> 2) + ((len & 3) != 0);
 
-    if (sw_n + words > SW_WORDS) {
+    if (words > SW_WORDS - sw_n) {
         sw_err = 1;
         return;
     }
@@ -69,7 +69,7 @@ static uint32 sw_string(const char *name)
         }
     }
 
-    if (sw_slen + nlen > SW_STRINGS) {
+    if (nlen > SW_STRINGS - sw_slen) {
         sw_err = 1;
         return 0;
     }
