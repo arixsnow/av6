@@ -75,8 +75,8 @@ _copyout_bytes:
 # x2 = max bytes (must be > 0 by caller; 0 returns -1)
 #
 # Returns:
-#   x0 = string length (excluding NULL) on success
-#   x0 = -1 if max bytes consumed without seeing NULL
+#   x0 = string length (excluding NUL) on success
+#   x0 = -1 if max bytes consumed without seeing NUL
 
 .global _copyinstr_bytes
 _copyinstr_bytes:
@@ -86,15 +86,15 @@ _copyinstr_bytes:
     ldtrb       w3, [x1]
     strb        w3, [x0], #1
     add         x1, x1, #1
-    cbz         w3, 2f          /* NULL: success */
+    cbz         w3, 2f          /* NUL: success */
     subs        x2, x2, #1
     b.ne        1b
 3:
     mov         x0, #-1
     ret
 2:
-    sub         x0, x0, x4      /* dst_not - dst_orig = bytes copied (incl NULL) */
-    sub         x0, x0, #1      /* exclude NULL from length */
+    sub         x0, x0, x4      /* bytes copied, NUL included */
+    sub         x0, x0, #1      /* exclude NUL from length */
     ret
 .size _copyinstr_bytes, . - _copyinstr_bytes
 

@@ -18,7 +18,7 @@
 
 #define PANIC_CPU_NONE      (~0UL)
 
-/* One second for the panic SGI to be taken, and a spin count if CNTFRQ is unset. */
+/* One second for the panic SGI to be taken, or a spin count if CNTFRQ is 0. */
 #define PANIC_STOP_SPINS    100000000UL
 
 volatile int panicking;

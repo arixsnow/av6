@@ -10,7 +10,7 @@
 #include "sys/types.h"
 #include "sys/bitops.h"
 
-/* MPIDR_EL1 affinity bits: Aff3[39:32] | Aff2[23:16] | Aff1[15:8] | Aff0[7:0] */
+/* MPIDR_EL1 affinity: Aff3[39:32] | Aff2[23:16] | Aff1[15:8] | Aff0[7:0] */
 #define MPIDR_AFF_MASK          0xFF00FFFFFFUL
 
 #define DAIF_I                  BIT(7)
@@ -40,9 +40,9 @@ static inline void irq_enable(void)
 }
 
 /*
- * Leave boot's all-masked posture. SError stays unmasked from here on, including
- * under a spinlock -- masking it discards errors silently. Debug stays masked:
- * nothing handles it yet.
+ * Leave boot's all-masked posture. SError stays unmasked from here on,
+ * including under a spinlock -- masking it discards errors silently. Debug
+ * stays masked: nothing handles it yet.
  */
 static inline void daif_procctx(void)
 {
@@ -156,12 +156,14 @@ static inline uint64 atomic64_cmpxchg_relaxed(volatile uint64 *p,
  * full-system, loads and stores. It belongs in early boot, not on hot path.
  */
 
-static inline void dmb(void)        /* Data Memory Barrier: ordering only */
+/* Data Memory Barrier: ordering only */
+static inline void dmb(void)
 {
     asm volatile("dmb sy" ::: "memory");
 }
 
-static inline void dsb(void)        /* Data Synchronization Barrier: ordering + completion */
+/* Data Synchronization Barrier: ordering + completion */
+static inline void dsb(void)
 {
     asm volatile("dsb sy" ::: "memory");
 }
@@ -178,12 +180,14 @@ static inline void dsb_ish(void)
     asm volatile("dsb ish" ::: "memory");
 }
 
-static inline void isb(void)        /* Instruction Synchronization Barrier: flush pipeline */
+/* Instruction Synchronization Barrier: flush pipeline */
+static inline void isb(void)
 {
     asm volatile("isb" ::: "memory");
 }
 
-static inline void wfi(void)        /* Wait for Interrupt: halt this CPU until an IRQ arrives */
+/* Wait for Interrupt: halt this CPU until an IRQ arrives */
+static inline void wfi(void)
 {
     asm volatile("wfi" ::: "memory");
 }

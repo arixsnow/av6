@@ -16,7 +16,7 @@
 
 #define NBLOCK          4
 
-/* Either side of every class edge, so a mis-indexed size shows up as overlap. */
+/* Both sides of every class edge, so a mis-indexed size shows as overlap. */
 static const uint16 edge[] = {
     1, 15, 16, 17, 31, 32, 33, 63, 64, 65, 95, 96, 97,
     127, 128, 129, 191, 192, 193, 255, 256, 257,
@@ -106,7 +106,7 @@ static void kmalloc_zero_size(struct ktest *t)
 }
 KTEST_CASE(kmalloc_zero_size);
 
-/* A kfree that failed to route back would exhaust the class long before this. */
+/* A kfree that failed to route back exhausts the class long before this. */
 static void kmalloc_free_returns_memory(struct ktest *t)
 {
     void *p;

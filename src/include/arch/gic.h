@@ -46,8 +46,8 @@ uint32 gic_nirqs(void);
  * nesting. A hardirq runs with PSTATE.I masked, and urgency between devices
  * is a scheduler concern (ithread priority), not a hardware one. This is the
  * high-reliability choice, no reentrant hardirq state, no unbounded nesting.
- * GIC_PRIO_NMI is a reserved higher-priority band (lower value = higher priority)
- * kept for a future pseudo-NMI.
+ * GIC_PRIO_NMI is a reserved higher-priority band (lower value = higher
+ * priority) kept for a future pseudo-NMI.
  */
 #define GIC_PRIO_NMI            0x80
 #define GIC_PRIO_DEFAULT        0xA0

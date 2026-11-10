@@ -88,7 +88,7 @@ struct proghdr {
     uint64 vaddr;       /* virtual address in memory */
     uint64 paddr;       /* physical address (irrelevant) */
     uint64 filesz;      /* bytes present in file */
-    uint64 memsz;       /* bytes occupied in memory (>=filesz; BSS = memsz - filesz) */
+    uint64 memsz;       /* bytes in memory (>= filesz, BSS = memsz - filesz) */
     uint64 align;
 };
 

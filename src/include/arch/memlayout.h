@@ -78,20 +78,22 @@
  * The window spans one whole 1GB L1 slot. A single static L2 table covers it.
  * The L3 tables beneath are allocated on DEMAND as stacks are created (see
  * kstack_walk). So the window's page-table footprint tracks the live proc count
- * rather than any configured ceiling. Region capacity is 1 GB / 32 KB = 32768 stacks.
+ * rather than any configured ceiling. Region capacity is 1 GB / 32 KB = 32768
+ * stacks.
  *
- * Each proc owns a power-of-2 32 KB slot, 32-KB aligned (KSTACK_WINDOW is GB-aligned).
- * Upper 16 KB = stack, lower 16 KB = guard (unmapped). The alignment lets the vectors
- * detect overflow with a one-bit test on SP. A valid SP (upper half) has bit KSTACK_SHIFT
- * set. A push into the guard clears it, caught before the guard is ever touched.
+ * Each proc owns a power-of-2 32 KB slot, 32-KB aligned (KSTACK_WINDOW is
+ * GB-aligned). Upper 16 KB = stack, lower 16 KB = guard (unmapped). The
+ * alignment lets the vectors detect overflow with a one-bit test on SP. A valid
+ * SP (upper half) has bit KSTACK_SHIFT set. A push into the guard clears it,
+ * caught before the guard is ever touched.
  */
-#define KSTACK_WINDOW_L1    511                             /* l1_table slot (511 GB) */
-#define KSTACK_WINDOW       (KERN_BASE + (511UL << 30))     /* = KERN_BASE + 511 GB */
-#define KSTACK_WINDOW_SIZE  (1UL << 30)                     /* one L1 slot = 1 GB */
-#define KSTACK_PAGES        4                               /* 16 KB usable stack */
-#define KSTACK_GUARD_PAGES  4                               /* 16 KB guard (lower half), unmapped */
-#define KSTACK_SLOT_PAGES   (KSTACK_GUARD_PAGES + KSTACK_PAGES) /* 8 pages = 32 KB */
-#define KSTACK_NSLOTS       (KSTACK_WINDOW_SIZE / (KSTACK_SLOT_PAGES * PGSIZE))     /* the proc ceiling */
+#define KSTACK_WINDOW_L1    511
+#define KSTACK_WINDOW       (KERN_BASE + (511UL << 30))
+#define KSTACK_WINDOW_SIZE  (1UL << 30)
+#define KSTACK_PAGES        4
+#define KSTACK_GUARD_PAGES  4
+#define KSTACK_SLOT_PAGES   (KSTACK_GUARD_PAGES + KSTACK_PAGES)
+#define KSTACK_NSLOTS       (KSTACK_WINDOW_SIZE / (KSTACK_SLOT_PAGES * PGSIZE))
 
 /*
  * MTE tag stripping for kernel virtual addresses.

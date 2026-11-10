@@ -280,10 +280,10 @@ void trap_unknown(uint64 esr, uint64 elr, uint64 far)
  * handle_stack_overflow - last-resort report for a kernel-stack overflow.
  *
  * Reached from the EL1 vector (el1_sync / el1_irq) when the incoming exception
- * frame would spill past the bottom of the running proc's kstack into the guard.
- * The vector has already switched SP to this CPU's overflow_stack, so this runs
- * on a known-good stack. 'sp' is the kernel SP at the failed entry. ELR/ESR/FAR
- * still hold the triggering exception. No return.
+ * frame would spill past the bottom of the running proc's kstack into the
+ * guard. The vector has already switched SP to this CPU's overflow_stack, so
+ * this runs on a known-good stack. 'sp' is the kernel SP at the failed entry.
+ * ELR/ESR/FAR still hold the triggering exception. No return.
  */
 void handle_stack_overflow(uint64 sp)
 {

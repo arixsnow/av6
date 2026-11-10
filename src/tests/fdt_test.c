@@ -217,7 +217,8 @@ static const void *fdt_fixture(void)
             SW_CELLS("#address-cells", 2);
             SW_CELLS("#size-cells", 2);
             SW_EMPTY("interrupt-controller");
-            SW_CELLS("reg", 0, 0x2f000000, 0, 0x10000, 0, 0x2f100000, 0, 0x200000);
+            SW_CELLS("reg", 0, 0x2f000000, 0, 0x10000,
+                0, 0x2f100000, 0, 0x200000);
             SW_CELLS("phandle", 1);
         sw_end();
         sw_begin("intc-off");

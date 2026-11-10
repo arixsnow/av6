@@ -121,7 +121,7 @@ static struct proc *pid_lookup(int pid)
     return NULL;
 }
 
-/* proc_cache ctor: runs once per object. init p->lock (survives free/realloc) */
+/* proc_cache ctor: runs once per object. p->lock survives free/realloc. */
 static void proc_ctor(void *obj)
 {
     struct proc *p = (struct proc *)obj;
@@ -171,7 +171,8 @@ struct proc *myproc(void)
  * slab. p->lock was initialized once by the ctor and survives free/realloc, so
  * it is NOT re-initialized. Every other field is stale slab memory and is set
  * explicitly. Returns NULL (releasing whatever it took) on exhaustion. The
- * caller does slow setup on the private proc, then proc_activate() publishes it.
+ * caller does slow setup on the private proc, then proc_activate() publishes
+ * it.
  */
 static struct proc *allocproc(void)
 {
@@ -252,9 +253,9 @@ static void freeproc(struct proc *p)
 
 /*
  * proc_activate : publish a freshly built proc, link it into allproc + the
- * pid hash, set it RUNNABLE, and enqueue it. If parent != NULL (fork) the caller
- * must already hold wait_lock. The parent link is set here.
- * Order: [wait_lock] -> ptable_lock -> p-> lock -> runq_lock
+ * pid hash, set it RUNNABLE, and enqueue it. If parent != NULL (fork) the
+ * caller must already hold wait_lock. The parent link is set here. Order:
+ * [wait_lock] -> ptable_lock -> p->lock -> runq_lock
  */
 static void proc_activate(struct proc *p, struct proc *parent)
 {
@@ -646,7 +647,7 @@ int fork(void)
 
     pid = np->pid;
 
-    /* publish: parent link under wait_lock, then allproc + pidhash + RUNNABLE + enqueue */
+    /* Parent link under wait_lock, then allproc, pidhash, RUNNABLE, enqueue. */
     acquire_spinlock(&wait_lock);
     proc_activate(np, p);
     release_spinlock(&wait_lock);

@@ -8,15 +8,15 @@
  * physmem.h - physical memory map
  *
  * DRAM does not start at 0 and need not be contiguous: it occupies one or more
- * banks at addresses the board chose, and the device tree reports them. Two sets
- * are kept:
+ * banks at addresses the board chose, and the device tree reports them. Two
+ * sets are kept:
  *      hardware regions    all physical RAM            -> kvminit maps these
  *      avail segments      hardware minus exclusions   -> kalloc frees these
  *
  * Exclusions are the kernel image, the boot page tables, the page descriptor
  * array, and later /reserved-memory. Filled by dtb_init() with the MMU off,
- * so the arrays are static. Memory cannot be allocated to describe where memory is.
- * Overflow panics. A bank is never silently dropped.
+ * so the arrays are static. Memory cannot be allocated to describe where memory
+ * is. Overflow panics. A bank is never silently dropped.
  */
 
 #ifndef _AV6_PHYSMEM_H_
@@ -50,7 +50,7 @@ struct vm_phys_seg {
 extern struct vm_phys_seg vm_phys_segs[VM_PHYSSEG_MAX];
 extern int vm_phys_nsegs;
 
-/* Record a bank of RAM. dtb_init() only. Sorted insert, coalescing neighbours. */
+/* Record a RAM bank. dtb_init() only. Sorted insert, coalescing neighbours. */
 void physmem_hardware_region(uint64 pa, uint64 size);
 
 /* Withhold a range from kalloc. Must precede physmem_avail(). */
@@ -61,8 +61,8 @@ bool physmem_excluded(uint64 pa, uint64 size);
 
 /*
  * Subtract the exclusions from the hardware regions and publish the result in
- * vm_phys_segs[]. Idempotent: kinit() runs it twice, once to size the descriptor
- * array and again after excluding the array itself.
+ * vm_phys_segs[]. Idempotent: kinit() runs it twice, once to size the
+ * descriptor array and again after excluding the array itself.
  */
 void physmem_avail(void);
 

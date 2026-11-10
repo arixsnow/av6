@@ -12,20 +12,21 @@
  *      per-CPU MAGAZINES a CPU's loaded/previous magazine (a small stack of
  *                        free objects). Alloc pops, free pushes, no lock, just
  *                        push_off() to pin the CPU.
- *      DEPOT             full/empty magazine lists shared by all CPUs, under the
- *                        cache lock. Refills/drains a magazine at a time, so the
- *                        lock is touched once per MAG_DEPTH objects.
- *      SLABS             one page from kpage_alloc(), an in-slab header at the page
- *                        base (cache, inuse, a free bitmap, list link) then the
- *                        object slot. Found from any object by PGROUNDDW().
+ *      DEPOT             full/empty magazine lists shared by all CPUs, under
+ *                        the cache lock. Refills/drains a magazine at a time,
+ *                        so the lock is touched once per MAG_DEPTH objects.
+ *      SLABS             one page from kpage_alloc(), an in-slab header at the
+ *                        page base (cache, inuse, a free bitmap, list link)
+ *                        then the object slot. Found from any object by
+ *                        PGROUNDDW().
  *
- * Objects stay CONSTRUCTED (the ctor run once when a slab is grown) across
+ * Objects stay CONSTRUCTED (the ctor runs once when a slab is grown) across
  * free -> magazine -> realloc, so free must leave an object idle-but-valid.
  *
  * The two internal caches (cache_cache, magazine_cache) run with the magazine
- * layer OFF (use_mag = 0) to break the bootstrap recursion, which is a normal
- * cache draws kmem_cache structs from cache_cache and magazines form magazine_cache,
- * and those two never need a magazine themselves.
+ * layer OFF (use_mag = 0) to break the bootstrap recursion: a normal
+ * cache draws kmem_cache structs from cache_cache and magazines from
+ * magazine_cache, and those two never need a magazine themselves.
  */
 
 #include "arch/arm64.h"
@@ -65,8 +66,8 @@ LIST_HEAD(kmem_maglist, kmem_magazine);
 struct slab {
     LIST_ENTRY(slab) link;              /* cache partial/full/empty list */
     struct kmem_cache *cache;           /* owning cache (validation) */
-    int inuse;                          /* slots handed out (incl. magazine-cached) */
-    bit_decl(used, SLAB_MAX_OBJS);      /* 1 = used, 0 = free, bit_ffc finds a free slot */
+    int inuse;                          /* slots handed out, magazines included */
+    bit_decl(used, SLAB_MAX_OBJS);      /* 1 = used, bit_ffc finds a free slot */
 };
 LIST_HEAD(kmem_slablist, slab);
 

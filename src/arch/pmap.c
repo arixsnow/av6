@@ -345,7 +345,7 @@ void kvminithart(void)
  *
  * The window is one 1 GB L1 slot covered by the static l2_kstack. The L3 tables
  * beneath it are allocated lazily here, the first time a stack in their 2 MB
- * span is mapped. With alloc == 0 or missing L3 returns NULL (used by free / lookup).
+ * span is mapped. With alloc == 0, a missing L3 returns NULL (free, lookup).
  */
 static pte_t *kstack_walk(uint64 va, int alloc)
 {
@@ -367,7 +367,7 @@ static pte_t *kstack_walk(uint64 va, int alloc)
     return &l3[L3X(va)];
 }
 
-/* kstack_base_va - VA of the lowest stack page (just above the guard) for slot. */
+/* kstack_base_va - VA of slot's lowest stack page, just above the guard. */
 static uint64 kstack_base_va(int idx)
 {
     return KSTACK_WINDOW
@@ -376,11 +376,11 @@ static uint64 kstack_base_va(int idx)
 }
 
 /*
- * kstack_alloc - may slot 'idx's kernel stack in the kstack window.
+ * kstack_alloc - map slot 'idx's kernel stack in the kstack window.
  *
- * Each slot is a power-of-2 32 KB block. THe lower KSTACK_GUARD_PAGES are the
- * unmapped guard, the upper KSTACK_PAGES are the stack. Returns the top-of-stack
- * VA (where SP_EL1 starts) or 0 on out-of-memory.
+ * Each slot is a power-of-2 32 KB block. The lower KSTACK_GUARD_PAGES are the
+ * unmapped guard, the upper KSTACK_PAGES are the stack. Returns the
+ * top-of-stack VA (where SP_EL1 starts) or 0 on out-of-memory.
  */
 uint64 kstack_alloc(int idx)
 {
@@ -431,9 +431,9 @@ uint64 kstack_alloc(int idx)
  *
  * The kstack window is a GLOBAL kernel mapping (TTBR1, shared by every CPU),
  * and a dying proc may have run on several CPUs, so the stale entries must be
- * dropped across the inner-shareable domain before the slot is reused. Order: clear
- * PTEs, make the clears visible, broadcast-invalidation each VA, wait. The L3
- * table is kept (the slot will be reused by a future proc).
+ * dropped across the inner-shareable domain before the slot is reused. Order:
+ * clear PTEs, make the clears visible, broadcast-invalidate each VA, wait. The
+ * L3 table is kept (the slot will be reused by a future proc).
  */
 void kstack_free(int idx)
 {
@@ -460,9 +460,10 @@ void kstack_free(int idx)
 }
 
 /*
- * kstack_slot_alloc - reserve a free kstack-window slot id, or -1 if the window is
- * full (the graceful proc-exhaustion path: allocproc then fails, fork returns -1).
- * The slot id indexes kstack_alloc/kstack_free. It replaces the old proctab index.
+ * kstack_slot_alloc - reserve a free kstack-window slot id, or -1 if the window
+ * is full (the graceful proc-exhaustion path: allocproc then fails, fork
+ * returns -1). The slot id indexes kstack_alloc/kstack_free. It replaces the
+ * old proctab index.
  */
 int kstack_slot_alloc(void)
 {

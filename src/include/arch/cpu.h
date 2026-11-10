@@ -67,8 +67,8 @@ struct cpu {
     int off_line;
     int need_resched;           /* clock asked to preempt, consumed at trap return */
     uint64 asid_active;         /* atomic ctx in TTBR0. 0 when drained */
-    volatile int online;        /* set by this CPU once bringup is done (SMP handshake) */
-    volatile int halted;        /* parked by panic, and the panicking CPU waits on it */
+    volatile int online;        /* set when bringup is done, smp_init() polls it */
+    volatile int halted;        /* parked by panic, panic_stop_others() waits on it */
     uint64 asid_reserved;       /* plain ctx carried across last rollover */
     int in_kmsg;                /* inside kmsg_add: re-entry takes the bypass */
 };

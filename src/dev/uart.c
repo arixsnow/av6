@@ -101,7 +101,7 @@ void uart_config(uint32 uartclk)
     mmio_write32(UART_REG(UART_IFLS), UART_IFLS_RX_1_2 | UART_IFLS_TX_1_2);
     mmio_write32(UART_REG(UART_CR), UART_CR_UARTEN | UART_CR_TXE | UART_CR_RXE);
 
-    /* Anything the firmware left pending would fire the moment the mask opens. */
+    /* Anything firmware left pending would fire as soon as the mask opens. */
     mmio_write32(UART_REG(UART_ICR), UART_INTR_ALL);
     mmio_write32(UART_REG(UART_IMSC), UART_IMSC_RXIM | UART_IMSC_RTIM);
 

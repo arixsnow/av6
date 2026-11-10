@@ -8,17 +8,17 @@
  * physmem.c - physical memory map
  *
  * Hardware regions come from the device tree. Exclusions are the ranges the
- * kernel has already spent: its image, the boot page tables. the page descriptor
- * array. physmem_avail() subtracts the second list from the first and publishes
- * what survives as vm_phys_segs[], the only memory kalloc may ever put on its
- * free list.
+ * kernel has already spent: its image, the boot page tables, the page
+ * descriptor array. physmem_avail() subtracts the second list from the first
+ * and publishes what survives as vm_phys_segs[], the only memory kalloc may
+ * ever put on its free list.
  *
- * Both lists are kept sorted and coalesced, so the subtract is one ordered walk.
- * All of this runs before an allocator exists, so the arrays are static and overflow
- * panics rather than dropping a bank.
+ * Both lists are kept sorted and coalesced, so the subtract is one ordered
+ * walk. All of this runs before an allocator exists, so the arrays are static
+ * and overflow panics rather than dropping a bank.
  *
- * Rounding is deliberately asymmetric: hardware regions shrink to whole pages, exclusions
- * grow to whole pages. Both err towards handing out less.
+ * Rounding is deliberately asymmetric: hardware regions shrink to whole pages,
+ * exclusions grow to whole pages. Both err towards handing out less.
  */
 
 #include "sys/kio.h"

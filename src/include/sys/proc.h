@@ -31,7 +31,7 @@ struct proc {
 
     /* private to the process (no lock needed) */
     uint64 kstack;          /* kernel stack address */
-    uintptr onfault;        /* copyin/out fixup PC during a user access, 0 = none */
+    uintptr onfault;        /* copyin/out fixup PC, 0 = none */
     struct trapframe *tf;   /* trapframe on kernel stack (EL0 traps) */
     pte_t *pagetable;       /* user page table (TTBR0), NULL for kthreads */
     void *isrc;             /* ithread: interrupt source served, else NULL */

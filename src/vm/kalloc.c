@@ -7,16 +7,16 @@
 /*
  * kalloc.c - Physical page allocator
  *
- * One struct page per usable physical page. The descriptor live in one array
- * carved from RAM above the kernel image and sliced across the physmem segments,
- * each segment pointing at its own slice. Holes between DRAM banks, and excluded
- * rages inside them, get no descriptors at all.
+ * One struct page per usable physical page. The descriptors live in one array
+ * carved from RAM above the kernel image and sliced across the physmem
+ * segments, each segment pointing at its own slice. Holes between DRAM banks,
+ * and excluded ranges inside them, get no descriptors at all.
  *
  * The freelist links descriptors, not data pages, and only pages physmem left
  * usable are on it.
  *
- * kinit() runs with MMU on: addresses here are KVAs, and physical memory is reached
- * through the DMAP.
+ * kinit() runs with MMU on: addresses here are KVAs, and physical memory is
+ * reached through the DMAP.
  */
 
 

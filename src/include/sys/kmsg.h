@@ -54,9 +54,10 @@ void kmsg_init(void);
  * KMSG_NO_SEQ if nothing was stored.
  *
  * KERN_CONT appends to the previous record instead of starting a new one, so a
- * continuation is not a second lock acquisition another CPU can interleave with.
- * A record becomes final when its text ends in a newline or when a later record
- * starts, and no reader sees it before then, so a line reaches the port whole.
+ * continuation is not a second lock acquisition another CPU can interleave
+ * with. A record becomes final when its text ends in a newline or when a later
+ * record starts, and no reader sees it before then, so a line reaches the port
+ * whole.
  */
 uint64 kmsg_add(int level, const char *text, uint16 len);
 

@@ -359,7 +359,7 @@ int exec(const char *path, uintptr uargv)
      * Info-block words: the argc argv pointers, plus 5 fixed words:
      * argc + the argv NULL, the envp NULL, and the auxv AT_NULL pair.
      */
-    infosz = ((uint64)argc + 5) * sizeof(uint64);           /* argc + argv + NULL + envp + auxv */
+    infosz = ((uint64)argc + 5) * sizeof(uint64);
     sp = (strbase - infosz) & ~0xfUL;
     if (sp < new_sz) {
         goto bad;
@@ -415,7 +415,7 @@ int exec(const char *path, uintptr uargv)
     return 0;
 
 bad:
-    /* The stack page is already mapped into new_pagetable, so uvmfree frees it. */
+    /* The stack page is mapped into new_pagetable, so uvmfree frees it. */
     if (argbuf != NULL) {
         kpage_free(argbuf);
     }

@@ -30,7 +30,7 @@
  * pagetable : already-allocated user pagetable (from uvmcreate())
  * bytes : kernel pointer to the ELF image
  * size : length of the image in bytes
- * entry_out : on success, set to ELF e_entry (the user PC where execution begins)
+ * entry_out : on success, set to ELF e_entry (the first user PC)
  * sz_out : on success, set to PGROUNDUP(highest mapped VA + 1)
  *
  * Returns 0 on success or -1 on validation / load failure. On failure,

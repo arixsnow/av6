@@ -209,7 +209,7 @@ exception_vectors:
     vector_entry        unhandled_exception
 
     /* Current EL, SPx : Kernel at EL1 with SP_EL1 */
-    vector_entry        el1_sync        /* Synchronous: data abort, SVC, undef */
+    vector_entry        el1_sync        /* Synchronous: abort, SVC, undef */
     vector_entry        el1_irq         /* IRQ: hardware interrupt */
     vector_entry        el1_fiq         /* FIQ: no source on this platform */
     vector_entry        el1_error       /* SError: RAS-classified */
@@ -249,7 +249,7 @@ el1_sync:
     bl      trap_sync
 
     restore_regs
-    eret                        /* Exception return - back to the interrupted code */
+    eret                        /* back to the interrupted code */
 
 /*
  * Handler: anything nothing is being handle yet
@@ -392,7 +392,7 @@ __bad_stack:
     add     x0, x0, :lo12:overflow_stack
     mrs     x2, tpidr_el1       /* x2 = logical CPU id */
     add     x2, x2, #1
-    add     x0, x0, x2, lsl #OVERFLOW_STACK_SHIFT   /* x0 = top of this CPU's slot */
+    add     x0, x0, x2, lsl #OVERFLOW_STACK_SHIFT   /* top of this CPU's slot */
     mov     sp, x0
     mov     x0, x1              /* arg0 = overflowing SP */
     bl      handle_stack_overflow

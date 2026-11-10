@@ -769,7 +769,7 @@ static uint32 fdt_irq_unit(const struct fdt *fdt, const struct fdt_node *node,
     return na;
 }
 
-/* 0: no usable entry. 1: the walk moves to *parent. 2: the nexus maps to itself. */
+/* 0: no usable entry. 1: move on to *parent. 2: the nexus maps to itself. */
 static int fdt_irq_map(const struct fdt *fdt, const struct fdt_node *nexus,
     uint32 *addr, uint32 *naddr, struct fdt_irq *irq, struct fdt_node *parent)
 {

@@ -64,8 +64,9 @@ SECTIONS
     }
 
     /*
-     * Per-CPU kernel (boot/idle) stacks. Each CPU gets a 32 KB slot, 32 KB-aligned.
-     * NCPU_MAX arrives via --defsym so this tracks the C-side array bound.
+     * Per-CPU kernel (boot/idle) stacks. Each CPU gets a 32 KB slot,
+     * 32 KB-aligned. NCPU_MAX arrives via --defsym so this tracks the
+     * C-side array bound.
      */
     . = ALIGN(0x8000);
     .stack (NOLOAD) : {

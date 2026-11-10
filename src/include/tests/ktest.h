@@ -8,17 +8,17 @@
  * ktest.h - Kernel Test System : in-kernel test cases
  *
  * A case is a plain function. KTEST_CASE() files a pointer to it in the .ktest
- * linker section, so a test file registers itself and no central llist has to be
+ * linker section, so a test file registers itself and no central list has to be
  * edited. Cases run in link order. A case whose result depends on what ran
  * before it is a coupled test, not an ordering problem.
  *
- * EXPECT records a failure and carries on. ASSERT records and abandons the case,
- * use it only where continuing would fault, since one run should report every
- * broken expectation rather than the first.
+ * EXPECT records a failure and carries on. ASSERT records and abandons the
+ * case, use it only where continuing would fault, since one run should report
+ * every broken expectation rather than the first.
  *
- * teardown always runs: after a failed setup, and after an ASSERT abandons the case.
- * That is why it belongs to the runner and not to the case, and why ASSERT can
- * be a plain return.
+ * teardown always runs: after a failed setup, and after an ASSERT abandons the
+ * case. That is why it belongs to the runner and not to the case, and why
+ * ASSERT can be a plain return.
  */
 
 #ifndef _AV6_KTEST_H_
@@ -27,7 +27,7 @@
 #include "sys/string.h"
 #include "sys/types.h"
 
-/* Case halts the kernel, so no result comes back. Selected by name, run one per boot */
+/* The case halts the kernel and reports nothing. Run by name, one per boot. */
 #define KTEST_NORETURN          0x01
 
 struct ktest {

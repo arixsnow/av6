@@ -166,7 +166,7 @@
 #define SCTLR_EL1_WXN           (1UL << 19)     /* Writable implied execute-never */
 #define SCTLR_EL1_TSCXT         (1UL << 20)     /* EL0 access to SCXTNUM_EL0 traps */
 #define SCTLR_EL1_IESB          (1UL << 21)     /* Implicit error barrier at eret/entry */
-#define SCTLR_EL1_EIS           (1UL << 22)     /* exception entry is context-synchronizing */
+#define SCTLR_EL1_EIS           (1UL << 22)     /* entry is context-synchronizing */
 #define SCTLR_EL1_E0E           (1UL << 24)     /* EL0 data endianness (0 = LE) */
 #define SCTLR_EL1_EE            (1UL << 25)     /* EL1 data endianness (0 = LE) */
 #define SCTLR_EL1_nTLSMD        (1UL << 28)     /* no trap on LD/ST-multiple to device */
