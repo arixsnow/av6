@@ -1,6 +1,6 @@
-# Copyright (c) 2026, Arka Mondal. All rights reserved.
-# Use of this source code is governed by a BSD-style license that
-# can be found in the LICENSE file.
+# Copyright (c) 2026, Arka Mondal
+#
+# SPDX-License-Identifier: BSD-3-Clause
 
 # src/user/user.mk - AV6 userland build, included by the project-root Makefile
 #
