@@ -212,7 +212,7 @@ int fdt_next_node(const struct fdt *fdt, struct fdt_node *node)
 
     p = node->props;
 
-    for (;;) {
+    while (true) {
         p = fdt_next_tag(fdt, p, &tag);
 
         switch (tag.type) {
@@ -294,7 +294,7 @@ static const void *fdt_getprop_namelen(const struct fdt *fdt,
 
     p = node->props;
 
-    for (;;) {
+    while (true) {
         p = fdt_next_tag(fdt, p, &tag);
 
         if (tag.type == FDT_NOP) {
