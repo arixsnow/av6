@@ -505,11 +505,11 @@ int fdt_translate_reg(const struct fdt *fdt, const struct fdt_node *node,
         return 0;
     }
 
-    if ((index + 1) * ((uint32)(na + ns) << 2) > len) {
+    if (((uint64)index + 1) * (uint32)(na + ns) * 4 > len) {
         return 0;
     }
 
-    reg += index * (uint32)(na + ns);
+    reg += (uint64)index * (uint32)(na + ns);
 
     if (!fdt_cells(reg, na, &addr) || !fdt_cells(reg + na, ns, &size)) {
         return 0;
@@ -745,7 +745,7 @@ static int fdt_irq_spec(const struct fdt *fdt, const struct fdt_node *node,
             return 0;
         }
 
-        p += index * n;
+        p += (uint64)index * n;
     }
 
     irq->ncells = n;
