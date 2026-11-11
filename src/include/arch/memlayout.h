@@ -8,6 +8,7 @@
 #define _AV6_MEMLAYOUT_H_
 
 #include <arch/assym.h>
+#include <sys/types.h>
 
 /*
  * AArch64 virtual address space split (48-bit VA, TBI enabled)
@@ -93,7 +94,9 @@
 #define KSTACK_PAGES       4
 #define KSTACK_GUARD_PAGES 4
 #define KSTACK_SLOT_PAGES  (KSTACK_GUARD_PAGES + KSTACK_PAGES)
-#define KSTACK_NSLOTS      (KSTACK_WINDOW_SIZE / (KSTACK_SLOT_PAGES * PGSIZE))
+#define KSTACK_SLOT_SIZE   ((uint64)KSTACK_SLOT_PAGES * PGSIZE)
+#define KSTACK_GUARD_SIZE  ((uint64)KSTACK_GUARD_PAGES * PGSIZE)
+#define KSTACK_NSLOTS      (KSTACK_WINDOW_SIZE / KSTACK_SLOT_SIZE)
 
 /*
  * MTE tag stripping for kernel virtual addresses.

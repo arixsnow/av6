@@ -377,8 +377,7 @@ static pte_t *kstack_walk(uint64 va, int alloc)
 /* kstack_base_va - VA of slot's lowest stack page, just above the guard. */
 static uint64 kstack_base_va(int idx)
 {
-    return KSTACK_WINDOW + (uint64)idx * KSTACK_SLOT_PAGES * PGSIZE
-        + (uint64)KSTACK_GUARD_PAGES * PGSIZE;
+    return KSTACK_WINDOW + idx * KSTACK_SLOT_SIZE + KSTACK_GUARD_SIZE;
 }
 
 /*
@@ -395,9 +394,7 @@ uint64 kstack_alloc(int idx)
     char *mem;
     pte_t *pte;
 
-    KASSERT(idx >= 0
-            && (uint64)(idx + 1) * KSTACK_SLOT_PAGES * PGSIZE
-                <= KSTACK_WINDOW_SIZE,
+    KASSERT(idx >= 0 && (idx + 1) * KSTACK_SLOT_SIZE <= KSTACK_WINDOW_SIZE,
         "kstack_alloc: slot %d outside the kstack window", idx);
 
     base_va = kstack_base_va(idx);
@@ -430,7 +427,7 @@ uint64 kstack_alloc(int idx)
 
     release_spinlock(&kstack_lock);
 
-    return KSTACK_WINDOW + (uint64)(idx + 1) * KSTACK_SLOT_PAGES * PGSIZE;
+    return KSTACK_WINDOW + (idx + 1) * KSTACK_SLOT_SIZE;
 }
 
 /*
