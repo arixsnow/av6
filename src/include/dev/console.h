@@ -15,7 +15,7 @@ uint32 console_rx_error(uint32 dr);
 void console_intr(void);
 int console_filter(void);
 
-uint64 console_read(char *dst, uint64 n);
+int64 console_read(char *dst, uint64 n);
 void console_write(const char *dst, uint64 n);
 void console_flush(void);
 void console_flush_upto(uint64 seq);

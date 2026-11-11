@@ -256,7 +256,8 @@ static uint64 sys_read(void)
 {
     int fd;
     uintptr user_buf;
-    uint64 n, chunk, got;
+    uint64 n, chunk;
+    int64 got;
     char bounce[READ_BOUNCE_SZ];
 
     argint(0, &fd);

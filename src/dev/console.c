@@ -353,7 +353,7 @@ int console_filter(void)
     return FILTER_SCHEDULE_THREAD;
 }
 
-uint64 console_read(char *dst, uint64 n)
+int64 console_read(char *dst, uint64 n)
 {
     int c;
     uint64 target;
@@ -392,5 +392,5 @@ uint64 console_read(char *dst, uint64 n)
 
     release_spinlock(&cons_lock);
 
-    return target - n;
+    return (int64)(target - n);
 }
