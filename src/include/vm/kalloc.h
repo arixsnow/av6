@@ -15,7 +15,7 @@ void kinit(void);
  */
 
 char *kpage_alloc(void);
-void kpage_free(char *vaddr);
+void kpage_free(const char *vaddr);
 
 void kpage_set_slab(void *va);
 int kpage_is_slab(void *va);

@@ -23,7 +23,7 @@ extern uint64 cpu_mpidr[NCPU_MAX];
 enum {
     PSCI_CONDUIT_NONE = 0,
     PSCI_CONDUIT_HVC,
-    PSCI_CONDUIT_SMC
+    PSCI_CONDUIT_SMC,
 };
 
 extern int psci_conduit;

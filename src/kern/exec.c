@@ -375,8 +375,8 @@ int exec(const char *path, uintptr uargv)
     w[0] = (uint64)argc;
     off = 0;
     for (i = 0; i < argc; i++) {
-        w[1 + i] = (uint64)(strbase + off);
-        off += (uint64)strlen(argbuf + off) + 1;
+        w[1 + i] = strbase + off;
+        off += strlen(argbuf + off) + 1;
     }
     w[1 + argc] = 0; /* argv[argc] = NULL */
     w[2 + argc] = 0; /* envp[0] = NULL */

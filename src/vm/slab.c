@@ -365,7 +365,6 @@ void kmem_cache_free(struct kmem_cache *cache, void *obj)
         cc->previous = cc->loaded;
         cc->loaded = empty;
         release_spinlock(&cache->lock);
-        continue;
     }
 }
 

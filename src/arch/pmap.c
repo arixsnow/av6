@@ -920,7 +920,7 @@ void uvmfree(pte_t *pagetable)
  *      [47:1] = BADDR (physical address of L0 table)
  *      [0] = CnP (ignored, set to 0)
  */
-void switchuvm(uint16 asid, pte_t *pagetable)
+void switchuvm(uint16 asid, const pte_t *pagetable)
 {
     uintptr pa;
     uint64 ttbr;

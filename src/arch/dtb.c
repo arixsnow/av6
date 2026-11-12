@@ -191,6 +191,18 @@ int dtb_psci_conduit(const struct fdt *fdt, const struct fdt_node *node)
     return PSCI_CONDUIT_NONE;
 }
 
+static const char *dtb_psci_conduit_name(int conduit)
+{
+    switch (conduit) {
+        case PSCI_CONDUIT_HVC:
+            return "hvc";
+        case PSCI_CONDUIT_SMC:
+            return "smc";
+        default:
+            return "none";
+    }
+}
+
 static void dtb_parse_psci(const struct fdt *fdt, const struct fdt_node *node)
 {
     psci_conduit = dtb_psci_conduit(fdt, node);
@@ -369,10 +381,7 @@ void dtb_init(void *dtb)
     printk("dtb: %d CPUs\n", ncpus);
     physmem_print();
 
-    printk("dtb: PSCI conduit = %s\n",
-        psci_conduit == PSCI_CONDUIT_SMC       ? "smc"
-            : psci_conduit == PSCI_CONDUIT_HVC ? "hvc"
-                                               : "none");
+    printk("dtb: PSCI conduit = %s\n", dtb_psci_conduit_name(psci_conduit));
 
     printk("platform: uart=%p irq=%u clk=%u Hz\n", (void *)platform.uart_base,
         platform.uart_irq, platform.uart_clk);

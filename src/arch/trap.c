@@ -290,7 +290,7 @@ void handle_stack_overflow(uint64 sp)
     asm volatile("mrs %0, far_el1" : "=r"(far));
 
     printk("\n=== KERNEL STACK OVERFLOW ===\n");
-    printk("cpu %d, pid %d (%s)\n", (int)cpuid(), p ? p->pid : -1,
+    printk("cpu %d, pid %d (%s)\n", cpuid(), p ? p->pid : -1,
         p ? p->name : "<none>");
     printk("    kernel SP = 0x%016lx (overflowed into the guard)\n", sp);
     printk("    ELR = 0x%016lx ESR = 0x%016lx FAR = 0x%016lx\n", elr, esr, far);

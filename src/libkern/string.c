@@ -177,7 +177,8 @@ int strncmp(const char *str1, const char *str2, uint64 n)
     for (; 0 < n; n--, str1++, str2++) {
         if (*str1 != *str2) {
             return (*(const uchar *)str1 < *(const uchar *)str2) ? -1 : 1;
-        } else if (*str1 == '\0') {
+        }
+        if (*str1 == '\0') {
             break;
         }
     }

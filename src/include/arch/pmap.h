@@ -29,7 +29,7 @@ uint64 uvmdealloc(pte_t *pagetable, uint64 oldsz, uint64 newsz);
 void uvmfree(pte_t *pagetable);
 
 /* Address space switch */
-void switchuvm(uint16 asid, pte_t *pagetable);
+void switchuvm(uint16 asid, const pte_t *pagetable);
 void switchuvm_reserved(void);
 
 /* Cache maintenance */

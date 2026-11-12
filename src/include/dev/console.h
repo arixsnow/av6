@@ -16,7 +16,7 @@ void console_intr(void);
 int console_filter(void);
 
 int64 console_read(char *dst, uint64 n);
-void console_write(const char *dst, uint64 n);
+void console_write(const char *buf, uint64 n);
 void console_flush(void);
 void console_flush_upto(uint64 seq);
 void console_replay(void);

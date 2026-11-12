@@ -45,7 +45,7 @@
 #include <sys/types.h>
 
 #define ASID_MAX_BITS 16
-#define ASID_MAX      (1u << ASID_MAX_BITS)
+#define ASID_MAX      (1U << ASID_MAX_BITS)
 
 static struct spinlock asid_lock;
 static uint64 asid_num_total;           /* 256 or 65536 */

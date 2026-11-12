@@ -175,7 +175,7 @@ void kinit(void)
         physmem_size() >> 20, vm_phys_nsegs, array_bytes >> 10);
 }
 
-void kpage_free(char *vaddr)
+void kpage_free(const char *vaddr)
 {
     struct page *pg;
     uintptr pa;

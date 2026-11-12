@@ -40,7 +40,7 @@
  */
 
 int copyin(void *dst, uintptr user_src, uint64 len);
-int copyout(uintptr user_dst, const void *str, uint64 len);
+int copyout(uintptr user_dst, const void *src, uint64 len);
 
 /*
  * copyinstr - copy a NULL-terminated string from user space

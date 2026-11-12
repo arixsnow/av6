@@ -20,7 +20,7 @@ enum procstate {
     SLEEPING,
     RUNNABLE,
     RUNNING,
-    ZOMBIE
+    ZOMBIE,
 };
 
 struct proc {

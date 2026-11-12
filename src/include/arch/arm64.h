@@ -72,11 +72,11 @@ static inline uint atomic_swap(volatile uint *addr, uint newval)
 {
     uint oldval, status;
 
-    asm volatile("1: ldaxr   %w0, [%2]       \n"
-                 "   stlxr   %w1, %w3, [%2]  \n"
+    asm volatile("1: ldaxr   %w0, %2         \n"
+                 "   stlxr   %w1, %w3, %2    \n"
                  "   cbnz    %w1, 1b         \n"
-        : "=&r"(oldval), "=&r"(status)
-        : "r"(addr), "r"(newval)
+        : "=&r"(oldval), "=&r"(status), "+Q"(*addr)
+        : "r"(newval)
         : "memory");
 
     return oldval;
@@ -108,11 +108,11 @@ static inline uint64 atomic64_xchg_relaxed(volatile uint64 *p, uint64 newval)
     uint64 oldval;
     uint status;
 
-    asm volatile("1: ldxr    %0, [%2]\n"
-                 "   stxr    %w1, %3, [%2]\n"
+    asm volatile("1: ldxr    %0, %2\n"
+                 "   stxr    %w1, %3, %2\n"
                  "   cbnz    %w1, 1b\n"
-        : "=&r"(oldval), "=&r"(status)
-        : "r"(p), "r"(newval)
+        : "=&r"(oldval), "=&r"(status), "+Q"(*p)
+        : "r"(newval)
         : "memory");
 
     return oldval;
@@ -124,14 +124,14 @@ static inline uint64 atomic64_cmpxchg_relaxed(volatile uint64 *p, uint64 expect,
     uint64 oldval;
     uint status;
 
-    asm volatile("1: ldxr    %0, [%2]\n"
+    asm volatile("1: ldxr    %0, %2\n"
                  "   cmp     %0, %3\n"
                  "   b.ne    2f\n"
-                 "   stxr    %w1, %4, [%2]\n"
+                 "   stxr    %w1, %4, %2\n"
                  "   cbnz    %w1, 1b\n"
                  "2:\n"
-        : "=&r"(oldval), "=&r"(status)
-        : "r"(p), "r"(expect), "r"(newval)
+        : "=&r"(oldval), "=&r"(status), "+Q"(*p)
+        : "r"(expect), "r"(newval)
         : "memory", "cc");
 
     return oldval;
