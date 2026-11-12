@@ -636,7 +636,7 @@ void icache_sync_page(void *page)
  * those distinctions).
  *
  * Returns 0 on success, -1 on out-of-memory. On failure the caller
- * is expected to release dst via uvmfree() : freewalk() copes with
+ * is expected to release dst via uvmfree(), which copes with
  * partially-populated pagetables.
  *
  * MTE note: page contents are copied via the kernel DMAP (untagged),
@@ -727,95 +727,100 @@ uint64 uvmalloc(pte_t *pagetable, uint64 oldsz, uint64 newsz)
     return newsz;
 }
 
-/*
- * uvmunmap_range : free leaves and collapse empty tables in
- * [va_start, va_end) of a user pagetable.
- *
- * Walks the affected subtree top-down. On the way back up,
- * any intermediate L3/L2/L1 table whose entries are all
- * zero is freed and the parent's pointer to it is cleared.
- * The L0 root is never freed here : it is the pagetable handle
- * itself, owned by uvmfree.
- *
- * Single-pass recursion : data-page free + table-collapse share
- * one traversal, so the cost is proportional to the affected
- * subtree, not to the entire address space.
- *
- * level: depth of table. 0 = L0 (root), 1 = L1, 2 = L2, 3 = L3.
- *          L3 entries are leaves (point to user data pages).
- *
- * Preconditions:
- *      va_start, va_end aligned to PGSIZE
- *      table is a valid pagetable page at the given level
- *      PTE_VALID set on every internal-pointer entry
- */
-static void uvmunmap_range(pte_t *table, int level, uintptr va_start,
-    uintptr va_end)
+static bool pt_empty(const pte_t *table)
 {
-    int shift, idx, j;
-    uintptr va, next_va, sub_start, sub_end;
-    uint64 entry_size;
-    pte_t *pte, *child;
-    char *page;
+    for (int i = 0; i < TABLE_ENTRIES; i++) {
+        if (table[i] != 0) {
+            return false;
+        }
+    }
 
-    KASSERT(level >= 0 && level <= 3, "uvmunmap_range: bad level %d", level);
+    return true;
+}
 
-    shift = pt_shift[level];
-    entry_size = 1UL << shift;
+static uintptr pt_next(uintptr va, uintptr end, int shift)
+{
+    uintptr next;
 
-    /*
-     * Round va down to this level's entry boundary so the loop
-     * always lands on entry-aligned addresses.
-     */
-    va = va_start & ~(entry_size - 1);
+    next = (va + (1UL << shift)) & ~((1UL << shift) - 1);
 
-    while (va < va_end) {
-        idx = (va >> shift) & (TABLE_ENTRIES - 1);
-        pte = &table[idx];
-        next_va = va + entry_size;
+    return (next < end) ? next : end;
+}
 
+static void unmap_l3(pte_t *l3, uintptr va, uintptr end)
+{
+    pte_t *pte;
+
+    for (; va < end; va += PGSIZE) {
+        pte = &l3[L3X(va)];
         if (*pte & PTE_VALID) {
-            if (level == 3) {
-                /*
-                 * Leaf entry : free the user data page if this VA
-                 * is genuinely inside the unmap range. The boundary
-                 * check covers the case where va_start/va_end fall
-                 * mid-L3-table.
-                 */
-                if (va >= va_start && va < va_end) {
-                    page = (char *)PA_TO_KVA(PTE_ADDR(*pte));
-                    kpage_free(page);
-                    *pte = 0;
-                }
-            } else {
-                /*
-                 * Internal entry : descend, clamp to the sub-range to
-                 * this entry's coverage.
-                 */
-                child = (pte_t *)PA_TO_KVA(PTE_ADDR(*pte));
-                sub_start = (va_start > va) ? va_start : va;
-                sub_end = (va_end < next_va) ? va_end : next_va;
+            kpage_free((char *)PA_TO_KVA(PTE_ADDR(*pte)));
+            *pte = 0;
+        }
+    }
+}
 
-                uvmunmap_range(child, level + 1, sub_start, sub_end);
+static void unmap_l2(pte_t *l2, uintptr va, uintptr end)
+{
+    uintptr next;
+    pte_t *pte, *l3;
 
-                /*
-                 * Collapse : if the child is now fully empty, free
-                 * it and clear our entry. The parent (one frame up)
-                 * will do the same for us if we end up empty.
-                 */
-                for (j = 0; j < TABLE_ENTRIES; j++) {
-                    if (child[j] != 0) {
-                        break;
-                    }
-                }
-                if (j == TABLE_ENTRIES) {
-                    kpage_free((char *)child);
-                    *pte = 0;
-                }
-            }
+    for (; va < end; va = next) {
+        next = pt_next(va, end, L2_SHIFT);
+        pte = &l2[L2X(va)];
+        if ((*pte & PTE_VALID) == 0) {
+            continue;
         }
 
-        va = next_va;
+        l3 = (pte_t *)PA_TO_KVA(PTE_ADDR(*pte));
+        unmap_l3(l3, va, next);
+        if (pt_empty(l3)) {
+            kpage_free((char *)l3);
+            *pte = 0;
+        }
+    }
+}
+
+static void unmap_l1(pte_t *l1, uintptr va, uintptr end)
+{
+    uintptr next;
+    pte_t *pte, *l2;
+
+    for (; va < end; va = next) {
+        next = pt_next(va, end, L1_SHIFT);
+        pte = &l1[L1X(va)];
+        if ((*pte & PTE_VALID) == 0) {
+            continue;
+        }
+
+        l2 = (pte_t *)PA_TO_KVA(PTE_ADDR(*pte));
+        unmap_l2(l2, va, next);
+        if (pt_empty(l2)) {
+            kpage_free((char *)l2);
+            *pte = 0;
+        }
+    }
+}
+
+/* Unmap [va, end) and free each table it empties, except the root. */
+static void unmap_l0(pte_t *l0, uintptr va, uintptr end)
+{
+    uintptr next;
+    pte_t *pte, *l1;
+
+    for (; va < end; va = next) {
+        next = pt_next(va, end, L0_SHIFT);
+        pte = &l0[L0X(va)];
+        if ((*pte & PTE_VALID) == 0) {
+            continue;
+        }
+
+        l1 = (pte_t *)PA_TO_KVA(PTE_ADDR(*pte));
+        unmap_l1(l1, va, next);
+        if (pt_empty(l1)) {
+            kpage_free((char *)l1);
+            *pte = 0;
+        }
     }
 }
 
@@ -827,11 +832,6 @@ static void uvmunmap_range(pte_t *table, int level, uintptr va_start,
  *
  * Returns newsz unconditionally (the operation cannot fail; pages
  * outside the active range are simply not freed).
- *
- * Note : we do not collapse empty L3/L2/L1 tables back to UNUSED.
- * Their pages stay allocated until the entire user pagetable is
- * torn down by uvmfree.
- * TODO: revisit if sbrk-heavy workloads need it.
  *
  * TLB invalidation is the caller's responsibility (growproc does
  * a per-ASID flush so this function stays pagetable-pure).
@@ -848,7 +848,7 @@ uint64 uvmdealloc(pte_t *pagetable, uint64 oldsz, uint64 newsz)
     va_end = USER_BASE + PGROUNDUP(oldsz);
 
     if (va_start < va_end) {
-        uvmunmap_range(pagetable, 0, va_start, va_end);
+        unmap_l0(pagetable, va_start, va_end);
     }
 
     return newsz;
@@ -865,47 +865,58 @@ pte_t *uvmcreate(void)
     return ptalloc();
 }
 
-/*
- * Free a user page table and all its mapped physical pages.
- *
- * Walks the 4-level table recursively.
- * Frees:
- *      L3 entries: the mapped physical page
- *      L2/L1/L0 tables: the page-table pages themselves
- *
- * sz is the size of the user mapping (how far to walk L3).
- * For simplicity, we walk the entire table structure.
- */
-static void freewalk(pte_t *pagetable, int level)
+static void freewalk_l3(pte_t *l3)
 {
-    pte_t entry, *child;
-    char *page;
-
     for (int i = 0; i < TABLE_ENTRIES; i++) {
-        entry = pagetable[i];
-
-        if ((entry & PTE_VALID) == 0) {
-            continue;
-        }
-
-        if (level < 3) {
-            child = (pte_t *)PA_TO_KVA(PTE_ADDR(entry));
-            freewalk(child, level + 1);
-            pagetable[i] = 0;
-        } else {
-            page = (char *)PA_TO_KVA(PTE_ADDR(entry));
-            kpage_free(page);
-            pagetable[i] = 0;
+        if (l3[i] & PTE_VALID) {
+            kpage_free((char *)PA_TO_KVA(PTE_ADDR(l3[i])));
+            l3[i] = 0;
         }
     }
 
-    /* Free this table page itself */
-    kpage_free((char *)pagetable);
+    kpage_free((char *)l3);
 }
 
+static void freewalk_l2(pte_t *l2)
+{
+    for (int i = 0; i < TABLE_ENTRIES; i++) {
+        if (l2[i] & PTE_VALID) {
+            freewalk_l3((pte_t *)PA_TO_KVA(PTE_ADDR(l2[i])));
+            l2[i] = 0;
+        }
+    }
+
+    kpage_free((char *)l2);
+}
+
+static void freewalk_l1(pte_t *l1)
+{
+    for (int i = 0; i < TABLE_ENTRIES; i++) {
+        if (l1[i] & PTE_VALID) {
+            freewalk_l2((pte_t *)PA_TO_KVA(PTE_ADDR(l1[i])));
+            l1[i] = 0;
+        }
+    }
+
+    kpage_free((char *)l1);
+}
+
+static void freewalk_l0(pte_t *l0)
+{
+    for (int i = 0; i < TABLE_ENTRIES; i++) {
+        if (l0[i] & PTE_VALID) {
+            freewalk_l1((pte_t *)PA_TO_KVA(PTE_ADDR(l0[i])));
+            l0[i] = 0;
+        }
+    }
+
+    kpage_free((char *)l0);
+}
+
+/* Free the page table with every table and page under it. */
 void uvmfree(pte_t *pagetable)
 {
-    freewalk(pagetable, 0);
+    freewalk_l0(pagetable);
 }
 
 /*
