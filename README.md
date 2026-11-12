@@ -37,6 +37,14 @@ make check        # boots a test kernel and grades itself
 
 Add `CPUS=8 MEM=2` if four cores and a gigabyte feel cramped.
 
+To make `git blame` skip commits that only reformat code, run this once in each clone:
+
+```sh
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
+Do not use `--global`: `git blame` then fails in repositories without this file.
+
 Nothing here is stable or finished, and none of it should go near hardware you are fond of.
 
 ## License
