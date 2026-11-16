@@ -37,15 +37,16 @@ extern char end[];
 #define PG_FREE   1 /* on freelist, available */
 #define PG_USED   2 /* allocated, in use */
 #define PG_SLAB   3 /* allocated, carved into objects by the slab */
+#define PG_DEFER  4 /* allocated, waiting on a pglist */
 
 /*
- * Physical page descriptor. .next links free page, .flags and .refcnt are
- * always valid. The PA is not stored, page_to_pa() derives it from the owning
- * segment, which costs a short scan and saves 8 bytes per page.
+ * Physical page descriptor. .next links a free or deferred page, .flags and
+ * .refcnt are always valid. The PA is not stored, page_to_pa() derives it from
+ * the owning segment, which costs a short scan and saves 8 bytes per page.
  */
 struct page {
-    struct page *next; /* freelist link (valid when PG_FREE) */
-    uint32 flags;      /* PG_UNUSED / PG_FREE / PG_USED */
+    struct page *next; /* freelist or pglist link */
+    uint32 flags;      /* PG_* */
     int32 refcnt;      /* reference count (COW fork) */
 };
 
@@ -175,6 +176,15 @@ void kinit(void)
         physmem_size() >> 20, vm_phys_nsegs, array_bytes >> 10);
 }
 
+/* Caller holds kmem.lock. */
+static void page_free_locked(struct page *pg)
+{
+    pg->flags = PG_FREE;
+    pg->refcnt = 0;
+    pg->next = kmem.freelist;
+    kmem.freelist = pg;
+}
+
 void kpage_free(const char *vaddr)
 {
     struct page *pg;
@@ -193,10 +203,43 @@ void kpage_free(const char *vaddr)
         "kpage_free: %#lx not allocated (flags %d)", pa, pg->flags);
     KASSERT(pg->refcnt == 1, "kfree: %#lx bad refcnt %d", pa, pg->refcnt);
 
-    pg->flags = PG_FREE;
-    pg->refcnt = 0;
-    pg->next = kmem.freelist;
-    kmem.freelist = pg;
+    page_free_locked(pg);
+
+    release_spinlock(&kmem.lock);
+}
+
+void kpage_defer(struct pglist *list, const char *vaddr)
+{
+    struct page *pg;
+    uintptr pa;
+
+    pa = KVA_TO_PA((uintptr)vaddr);
+
+    KASSERT(pa % PGSIZE == 0, "kpage_defer: unaligned address %#lx", pa);
+
+    pg = pa_to_page(pa);
+    KASSERT(pg != NULL, "kpage_defer: %#lx is not managed RAM", pa);
+    KASSERT(pg->flags == PG_USED && pg->refcnt == 1,
+        "kpage_defer: %#lx not allocated (flags %d)", pa, pg->flags);
+
+    pg->flags = PG_DEFER;
+    pg->next = list->head;
+    list->head = pg;
+}
+
+void kpage_free_list(struct pglist *list)
+{
+    struct page *pg;
+
+    acquire_spinlock(&kmem.lock);
+
+    while (list->head != NULL) {
+        pg = list->head;
+        list->head = pg->next;
+
+        KASSERT(pg->flags == PG_DEFER, "kpage_free_list: page not deferred");
+        page_free_locked(pg);
+    }
 
     release_spinlock(&kmem.lock);
 }

@@ -380,6 +380,22 @@ static uint64 kstack_base_va(int idx)
     return KSTACK_WINDOW + idx * KSTACK_SLOT_SIZE + KSTACK_GUARD_SIZE;
 }
 
+/* Caller holds kstack_lock. */
+static void kstack_unmap(uint64 base_va, int npages, struct pglist *free)
+{
+    pte_t *pte;
+
+    for (int i = 0; i < npages; i++) {
+        pte = kstack_walk(base_va + (uint64)i * PGSIZE, 0);
+        if (pte != NULL && (*pte & PTE_VALID)) {
+            kpage_defer(free, (char *)PA_TO_KVA(PTE_ADDR(*pte)));
+            *pte = 0;
+        }
+    }
+
+    tlbi_vaae1is_range(base_va, (uint64)npages);
+}
+
 /*
  * kstack_alloc - map slot 'idx's kernel stack in the kstack window.
  *
@@ -389,8 +405,9 @@ static uint64 kstack_base_va(int idx)
  */
 uint64 kstack_alloc(int idx)
 {
+    struct pglist free = {NULL};
     uint64 base_va, va;
-    int i, j;
+    int i;
     char *mem;
     pte_t *pte;
 
@@ -411,12 +428,9 @@ uint64 kstack_alloc(int idx)
             if (mem != NULL) {
                 kpage_free(mem);
             }
-            for (j = 0; j < i; j++) {
-                pte = kstack_walk(base_va + (uint64)j * PGSIZE, 0);
-                kpage_free((char *)PA_TO_KVA(PTE_ADDR(*pte)));
-                *pte = 0;
-            }
+            kstack_unmap(base_va, i, &free);
             release_spinlock(&kstack_lock);
+            kpage_free_list(&free);
             return 0;
         }
         *pte = KVA_TO_PA((uintptr)mem) | PAGE_KERNEL;
@@ -436,31 +450,19 @@ uint64 kstack_alloc(int idx)
  * The kstack window is a GLOBAL kernel mapping (TTBR1, shared by every CPU),
  * and a dying proc may have run on several CPUs, so the stale entries must be
  * dropped across the inner-shareable domain before the slot is reused. Order:
- * clear PTEs, make the clears visible, broadcast-invalidate each VA, wait. The
- * L3 table is kept (the slot will be reused by a future proc).
+ * clear PTEs, make the clears visible, broadcast-invalidate each VA, wait.
+ * Only then are the pages freed. The L3 table is kept (the slot will be reused
+ * by a future proc).
  */
 void kstack_free(int idx)
 {
-    uint64 base_va;
-    int i;
-    pte_t *pte;
-
-    base_va = kstack_base_va(idx);
+    struct pglist free = {NULL};
 
     acquire_spinlock(&kstack_lock);
-
-    for (i = 0; i < KSTACK_PAGES; i++) {
-        pte = kstack_walk(base_va + (uint64)i * PGSIZE, 0);
-        if (pte != NULL && (*pte & PTE_VALID)) {
-            kpage_free((char *)PA_TO_KVA(PTE_ADDR(*pte)));
-            *pte = 0;
-        }
-    }
-
-    /* Drop the stale translations */
-    tlbi_vaae1is_range(base_va, KSTACK_PAGES);
-
+    kstack_unmap(kstack_base_va(idx), KSTACK_PAGES, &free);
     release_spinlock(&kstack_lock);
+
+    kpage_free_list(&free);
 }
 
 /*
@@ -686,8 +688,8 @@ int uvmcopy(pte_t *src, pte_t *dst, uint64 sz)
  * uvmalloc : grow the user mapping from oldsz to newsz.
  *
  * Allocates and zeroes pages for [PGROUNDUP(oldsz), newsz) and
- * maps them with PAGE_USER permissions. On out-of-memory, rolls
- * back any pages already mapped via uvmdealloc and returns 0.
+ * maps them with PAGE_USER permissions. On out-of-memory, the pages
+ * it mapped go on free and it returns 0.
  *
  * Returns the new size (newsz) on success, 0 on failure.
  *
@@ -695,7 +697,8 @@ int uvmcopy(pte_t *src, pte_t *dst, uint64 sz)
  * (matching uvmcopy's convention). The caller (growproc) passes
  * p->sz directly.
  */
-uint64 uvmalloc(pte_t *pagetable, uint64 oldsz, uint64 newsz)
+uint64 uvmalloc(pte_t *pagetable, uint64 oldsz, uint64 newsz,
+    struct pglist *free)
 {
     char *mem;
     uint64 a;
@@ -709,7 +712,7 @@ uint64 uvmalloc(pte_t *pagetable, uint64 oldsz, uint64 newsz)
     for (a = oldsz; a < newsz; a += PGSIZE) {
         mem = kpage_alloc();
         if (mem == NULL) {
-            uvmdealloc(pagetable, a, oldsz);
+            uvmdealloc(pagetable, a, oldsz, free);
             return 0;
         }
 
@@ -719,7 +722,7 @@ uint64 uvmalloc(pte_t *pagetable, uint64 oldsz, uint64 newsz)
             PGSIZE, PAGE_USER);
         if (err < 0) {
             kpage_free(mem);
-            uvmdealloc(pagetable, a, oldsz);
+            uvmdealloc(pagetable, a, oldsz, free);
             return 0;
         }
     }
@@ -747,20 +750,20 @@ static uintptr pt_next(uintptr va, uintptr end, int shift)
     return (next < end) ? next : end;
 }
 
-static void unmap_l3(pte_t *l3, uintptr va, uintptr end)
+static void unmap_l3(pte_t *l3, uintptr va, uintptr end, struct pglist *free)
 {
     pte_t *pte;
 
     for (; va < end; va += PGSIZE) {
         pte = &l3[L3X(va)];
         if (*pte & PTE_VALID) {
-            kpage_free((char *)PA_TO_KVA(PTE_ADDR(*pte)));
+            kpage_defer(free, (char *)PA_TO_KVA(PTE_ADDR(*pte)));
             *pte = 0;
         }
     }
 }
 
-static void unmap_l2(pte_t *l2, uintptr va, uintptr end)
+static void unmap_l2(pte_t *l2, uintptr va, uintptr end, struct pglist *free)
 {
     uintptr next;
     pte_t *pte, *l3;
@@ -773,15 +776,15 @@ static void unmap_l2(pte_t *l2, uintptr va, uintptr end)
         }
 
         l3 = (pte_t *)PA_TO_KVA(PTE_ADDR(*pte));
-        unmap_l3(l3, va, next);
+        unmap_l3(l3, va, next, free);
         if (pt_empty(l3)) {
-            kpage_free((char *)l3);
+            kpage_defer(free, (char *)l3);
             *pte = 0;
         }
     }
 }
 
-static void unmap_l1(pte_t *l1, uintptr va, uintptr end)
+static void unmap_l1(pte_t *l1, uintptr va, uintptr end, struct pglist *free)
 {
     uintptr next;
     pte_t *pte, *l2;
@@ -794,16 +797,16 @@ static void unmap_l1(pte_t *l1, uintptr va, uintptr end)
         }
 
         l2 = (pte_t *)PA_TO_KVA(PTE_ADDR(*pte));
-        unmap_l2(l2, va, next);
+        unmap_l2(l2, va, next, free);
         if (pt_empty(l2)) {
-            kpage_free((char *)l2);
+            kpage_defer(free, (char *)l2);
             *pte = 0;
         }
     }
 }
 
-/* Unmap [va, end) and free each table it empties, except the root. */
-static void unmap_l0(pte_t *l0, uintptr va, uintptr end)
+/* Unmap [va, end) and defer each page and emptied table, except the root. */
+static void unmap_l0(pte_t *l0, uintptr va, uintptr end, struct pglist *free)
 {
     uintptr next;
     pte_t *pte, *l1;
@@ -816,9 +819,9 @@ static void unmap_l0(pte_t *l0, uintptr va, uintptr end)
         }
 
         l1 = (pte_t *)PA_TO_KVA(PTE_ADDR(*pte));
-        unmap_l1(l1, va, next);
+        unmap_l1(l1, va, next, free);
         if (pt_empty(l1)) {
-            kpage_free((char *)l1);
+            kpage_defer(free, (char *)l1);
             *pte = 0;
         }
     }
@@ -828,15 +831,15 @@ static void unmap_l0(pte_t *l0, uintptr va, uintptr end)
  * uvmdealloc : shrink the user mapping from oldsz to newsz.
  *
  * Walks each leaf PTE in [PGROUNDUP(newsz), PGROUNDUP(oldsz)),
- * frees the underlying page, and clears the PTE.
+ * clears it, and puts the underlying page on free.
  *
  * Returns newsz unconditionally (the operation cannot fail; pages
  * outside the active range are simply not freed).
  *
- * TLB invalidation is the caller's responsibility (growproc does
- * a per-ASID flush so this function stays pagetable-pure).
+ * The caller invalidates the TLB, then frees the pages on free.
  */
-uint64 uvmdealloc(pte_t *pagetable, uint64 oldsz, uint64 newsz)
+uint64 uvmdealloc(pte_t *pagetable, uint64 oldsz, uint64 newsz,
+    struct pglist *free)
 {
     uintptr va_start, va_end;
 
@@ -848,7 +851,7 @@ uint64 uvmdealloc(pte_t *pagetable, uint64 oldsz, uint64 newsz)
     va_end = USER_BASE + PGROUNDUP(oldsz);
 
     if (va_start < va_end) {
-        unmap_l0(pagetable, va_start, va_end);
+        unmap_l0(pagetable, va_start, va_end, free);
     }
 
     return newsz;
@@ -916,6 +919,9 @@ static void freewalk_l0(pte_t *l0)
 /* Free the page table with every table and page under it. */
 void uvmfree(pte_t *pagetable)
 {
+    KASSERT(PTE_ADDR(read_sysreg(ttbr0_el1)) != KVA_TO_PA((uintptr)pagetable),
+        "uvmfree: %p is still in TTBR0", (void *)pagetable);
+
     freewalk_l0(pagetable);
 }
 

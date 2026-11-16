@@ -9,6 +9,8 @@
 
 #include <sys/types.h>
 
+struct pglist;
+
 /* Kernel page tables (boot) */
 uintptr boot_alloc(uint64 npages);
 void kvminit(void);
@@ -24,8 +26,10 @@ void kstack_free(int idx);
 pte_t *uvmcreate(void);
 int mappages(pte_t *pagetable, uintptr va, uintptr pa, uint64 sz, uint64 perm);
 int uvmcopy(pte_t *src, pte_t *dst, uint64 sz);
-uint64 uvmalloc(pte_t *pagetable, uint64 oldsz, uint64 newsz);
-uint64 uvmdealloc(pte_t *pagetable, uint64 oldsz, uint64 newsz);
+uint64 uvmalloc(pte_t *pagetable, uint64 oldsz, uint64 newsz,
+    struct pglist *free);
+uint64 uvmdealloc(pte_t *pagetable, uint64 oldsz, uint64 newsz,
+    struct pglist *free);
 void uvmfree(pte_t *pagetable);
 
 /* Address space switch */

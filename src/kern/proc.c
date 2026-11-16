@@ -469,15 +469,21 @@ void exit(int status)
 {
     struct proc *p = myproc();
     struct proc *child;
+    pte_t *pagetable;
 
     if (p == initproc) {
         panic("init exiting");
     }
 
     if (p->pagetable) {
-        uvmfree(p->pagetable);
+        pagetable = p->pagetable;
         p->pagetable = NULL;
         p->sz = 0;
+
+        /* Nothing may walk the table once it is freed. */
+        switchuvm_reserved();
+        asid_flush(p);
+        uvmfree(pagetable);
     }
 
     acquire_spinlock(&wait_lock);
@@ -659,20 +665,23 @@ int fork(void)
 int growproc(int n)
 {
     struct proc *p = myproc();
+    struct pglist free = {NULL};
     uint64 sz = p->sz;
 
     if (n > 0) {
-        sz = uvmalloc(p->pagetable, sz, sz + n);
+        sz = uvmalloc(p->pagetable, sz, sz + n, &free);
         if (sz == 0) {
             asid_flush(p);
+            kpage_free_list(&free);
             return -1;
         }
     } else if (n < 0) {
         if ((uint64)(-n) > sz) {
             return -1;
         }
-        sz = uvmdealloc(p->pagetable, sz, sz + n);
+        sz = uvmdealloc(p->pagetable, sz, sz + n, &free);
         asid_flush(p);
+        kpage_free_list(&free);
     }
 
     p->sz = sz;
