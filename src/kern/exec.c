@@ -118,34 +118,16 @@ static int load_segment(pte_t *pagetable, const uchar *src, struct proghdr *ph)
     return 0;
 }
 
-/*
- * loadelf
- *
- * High-level flow :
- *      1. Validate elfhdr (magic, class, data, machine, type, phentsize)
- *      2. Walk program headers; for each PT_LOAD :
- *          : sanity-check vaddr/memsz against MAXUVA
- *          : sanity-check off/filesz against the blob size
- *          : load_segment() into the pagetable
- *      3. Track the highest VA seen and report it via *sz_out
- *
- * Diagnostics on failure go to printk so userinit / exec() can panic
- * with a meaningful boot log rather than just "exec failed".
- */
-int loadelf(pte_t *pagetable, const uchar *bytes, uint64 size,
-    uintptr *entry_out, uint64 *sz_out)
+static int elf_check_header(const uchar *bytes, uint64 size)
 {
-    struct elfhdr *eh;
-    struct proghdr *ph;
-    uint64 ph_off, max_end = 0, end;
-    int i;
+    const struct elfhdr *eh;
 
     if (size < sizeof(struct elfhdr)) {
         printk("loadelf: image too small (%lu bytes)\n", size);
         return -1;
     }
 
-    eh = (struct elfhdr *)bytes;
+    eh = (const struct elfhdr *)bytes;
 
     if (eh->ident[EI_MAG0] != ELFMAG0
         || eh->ident[EI_MAG1] != ELFMAG1
@@ -180,6 +162,62 @@ int loadelf(pte_t *pagetable, const uchar *bytes, uint64 size,
         return -1;
     }
 
+    return 0;
+}
+
+static int elf_check_load(const struct proghdr *ph, int i, uint64 size)
+{
+    if (ph->memsz < ph->filesz) {
+        printk("loadelf: phdr %d : memsz < filesz\n", i);
+        return -1;
+    }
+
+    if (ph->vaddr + ph->memsz < ph->vaddr) {
+        printk("loadelf: phdr %d : vaddr+memsz overflow\n", i);
+        return -1;
+    }
+
+    if (ph->vaddr + ph->memsz > MAXUVA) {
+        printk("loadelf: phdr %d : runs past MAXUVA\n", i);
+        return -1;
+    }
+
+    if (ph->off + ph->filesz > size) {
+        printk("loadelf: phdr %d : file range past EOF\n", i);
+        return -1;
+    }
+
+    return 0;
+}
+
+/*
+ * loadelf
+ *
+ * High-level flow :
+ *      1. Validate elfhdr (magic, class, data, machine, type, phentsize)
+ *      2. Walk program headers; for each PT_LOAD :
+ *          : sanity-check vaddr/memsz against MAXUVA
+ *          : sanity-check off/filesz against the blob size
+ *          : load_segment() into the pagetable
+ *      3. Track the highest VA seen and report it via *sz_out
+ *
+ * Diagnostics on failure go to printk so userinit / exec() can panic
+ * with a meaningful boot log rather than just "exec failed".
+ */
+int loadelf(pte_t *pagetable, const uchar *bytes, uint64 size,
+    uintptr *entry_out, uint64 *sz_out)
+{
+    struct elfhdr *eh;
+    struct proghdr *ph;
+    uint64 ph_off, max_end = 0, end;
+    int i;
+
+    if (elf_check_header(bytes, size) < 0) {
+        return -1;
+    }
+
+    eh = (struct elfhdr *)bytes;
+
     for (i = 0; i < eh->phnum; i++) {
         ph_off = eh->phoff + (uint64)i * eh->phentsize;
 
@@ -194,23 +232,7 @@ int loadelf(pte_t *pagetable, const uchar *bytes, uint64 size,
             continue;
         }
 
-        if (ph->memsz < ph->filesz) {
-            printk("loadelf: phdr %d : memsz < filesz\n", i);
-            return -1;
-        }
-
-        if (ph->vaddr + ph->memsz < ph->vaddr) {
-            printk("loadelf: phdr %d : vaddr+memsz overflow\n", i);
-            return -1;
-        }
-
-        if (ph->vaddr + ph->memsz > MAXUVA) {
-            printk("loadelf: phdr %d : runs past MAXUVA\n", i);
-            return -1;
-        }
-
-        if (ph->off + ph->filesz > size) {
-            printk("loadelf: phdr %d : file range past EOF\n", i);
+        if (elf_check_load(ph, i, size) < 0) {
             return -1;
         }
 
@@ -234,6 +256,110 @@ int loadelf(pte_t *pagetable, const uchar *bytes, uint64 size,
     *sz_out = PGROUNDUP(max_end);
 
     return 0;
+}
+
+static int exec_lookup(const char *path, const uchar **start, const uchar **end)
+{
+    for (int i = 0; embedded_progs[i].path != NULL; i++) {
+        if (strcmp(path, embedded_progs[i].path) == 0) {
+            *start = embedded_progs[i].start;
+            *end = embedded_progs[i].end;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+static int exec_copyin_args(uintptr uargv, char *argbuf, int *argcp,
+    uint64 *posp)
+{
+    uintptr uarg;
+    uint64 pos;
+    int argc, slen, err;
+
+    pos = 0;
+    for (argc = 0; argc < MAXARG; argc++) {
+        err = copyin(&uarg, uargv + (uint64)argc * sizeof(uintptr),
+            sizeof(uarg));
+        if (err < 0) {
+            return -1;
+        }
+        if (uarg == 0) {
+            break;
+        }
+        slen = copyinstr(argbuf + pos, uarg, PGSIZE - pos);
+        if (slen < 0) {
+            return -1;
+        }
+        pos += (uint64)slen + 1;
+    }
+    if (argc == MAXARG) {
+        return -1;
+    }
+
+    *argcp = argc;
+    *posp = pos;
+
+    return 0;
+}
+
+/*
+ * Lay out the new user stack, writing through the stack pages's KVA.
+ * It maps to user VA. argv strings at the top, then the info block.
+ * (argc, argv[], NULL, envp NULL, auxv AT_NULL) with SP pointing at argc.
+ * argv pointer values are re-derived by walking the packed string.
+ */
+static int exec_copyout_strings(char *stack, uint64 new_sz, const char *argbuf,
+    int argc, uint64 pos, uintptr *spp)
+{
+    uintptr strbase, sp;
+    uint64 infosz, off, *w;
+
+    strbase = (new_sz + PGSIZE - pos) & ~0xfUL;
+    if (pos != 0) {
+        memcpy(stack + (strbase - new_sz), argbuf, pos);
+    }
+
+    /*
+     * Info-block words: the argc argv pointers, plus 5 fixed words:
+     * argc + the argv NULL, the envp NULL, and the auxv AT_NULL pair.
+     */
+    infosz = ((uint64)argc + 5) * sizeof(uint64);
+    sp = (strbase - infosz) & ~0xfUL;
+    if (sp < new_sz) {
+        return -1;
+    }
+
+    w = (uint64 *)(stack + (sp - new_sz));
+    w[0] = (uint64)argc;
+    off = 0;
+    for (int i = 0; i < argc; i++) {
+        w[1 + i] = strbase + off;
+        off += strlen(argbuf + off) + 1;
+    }
+    w[1 + argc] = 0; /* argv[argc] = NULL */
+    w[2 + argc] = 0; /* envp[0] = NULL */
+    w[3 + argc] = 0; /* auxv: AT_NULL type */
+    w[4 + argc] = 0; /* auxv: value 0 */
+
+    *spp = sp;
+
+    return 0;
+}
+
+static void exec_set_name(struct proc *p, const char *path)
+{
+    const char *base, *q;
+
+    base = path;
+    for (q = path; *q != '\0'; q++) {
+        if (*q == '/') {
+            base = q + 1;
+        }
+    }
+    strncpy(p->name, base, sizeof(p->name) - 1);
+    p->name[sizeof(p->name) - 1] = '\0';
 }
 
 /*
@@ -275,22 +401,13 @@ int exec(const char *path, uintptr uargv)
 {
     struct proc *p = myproc();
     pte_t *new_pagetable, *old_pagetable;
-    const uchar *elf_start = NULL, *elf_end = NULL;
-    uintptr entry, uarg, strbase, sp;
-    uint64 elf_size, new_sz, pos, off, infosz, *w;
+    const uchar *elf_start, *elf_end;
+    uintptr entry, sp;
+    uint64 elf_size, new_sz, pos;
     char *stack, *argbuf;
-    const char *base, *q;
-    int i, argc, slen, err;
+    int argc, err;
 
-    /* Resolve path : tiny linear scan; table is NULL-terminated */
-    for (i = 0; embedded_progs[i].path != NULL; i++) {
-        if (strcmp(path, embedded_progs[i].path) == 0) {
-            elf_start = embedded_progs[i].start;
-            elf_end = embedded_progs[i].end;
-            break;
-        }
-    }
-    if (elf_start == NULL) {
+    if (exec_lookup(path, &elf_start, &elf_end) < 0) {
         return -1; /* no such binary */
     }
 
@@ -329,59 +446,14 @@ int exec(const char *path, uintptr uargv)
         if (argbuf == NULL) {
             goto bad;
         }
-        for (argc = 0; argc < MAXARG; argc++) {
-            err = copyin(&uarg, uargv + (uint64)argc * sizeof(uintptr),
-                sizeof(uarg));
-            if (err < 0) {
-                goto bad;
-            }
-            if (uarg == 0) {
-                break;
-            }
-            slen = copyinstr(argbuf + pos, uarg, PGSIZE - pos);
-            if (slen < 0) {
-                goto bad;
-            }
-            pos += (uint64)slen + 1;
-        }
-        if (argc == MAXARG) {
+        if (exec_copyin_args(uargv, argbuf, &argc, &pos) < 0) {
             goto bad;
         }
     }
 
-    /*
-     * Lay out the new user stack, writing through the stack pages's KVA.
-     * It maps to user VA. argv strings at the top, then the info block.
-     * (argc, argv[], NULL, envp NULL, auxv AT_NULL) with SP pointing at argc.
-     * argv pointer values are re-derived by walking the packed string.
-     */
-
-    strbase = (new_sz + PGSIZE - pos) & ~0xfUL;
-    if (pos != 0) {
-        memcpy(stack + (strbase - new_sz), argbuf, pos);
-    }
-
-    /*
-     * Info-block words: the argc argv pointers, plus 5 fixed words:
-     * argc + the argv NULL, the envp NULL, and the auxv AT_NULL pair.
-     */
-    infosz = ((uint64)argc + 5) * sizeof(uint64);
-    sp = (strbase - infosz) & ~0xfUL;
-    if (sp < new_sz) {
+    if (exec_copyout_strings(stack, new_sz, argbuf, argc, pos, &sp) < 0) {
         goto bad;
     }
-
-    w = (uint64 *)(stack + (sp - new_sz));
-    w[0] = (uint64)argc;
-    off = 0;
-    for (i = 0; i < argc; i++) {
-        w[1 + i] = strbase + off;
-        off += strlen(argbuf + off) + 1;
-    }
-    w[1 + argc] = 0; /* argv[argc] = NULL */
-    w[2 + argc] = 0; /* envp[0] = NULL */
-    w[3 + argc] = 0; /* auxv: AT_NULL type */
-    w[4 + argc] = 0; /* auxv: value 0 */
 
     if (argbuf != NULL) {
         kpage_free(argbuf);
@@ -397,15 +469,7 @@ int exec(const char *path, uintptr uargv)
     p->tf->elr = entry;
     p->tf->spsr = 0x0;
 
-    /* p->name = basename of path (last component after the final '/') */
-    base = path;
-    for (q = path; *q != '\0'; q++) {
-        if (*q == '/') {
-            base = q + 1;
-        }
-    }
-    strncpy(p->name, base, sizeof(p->name) - 1);
-    p->name[sizeof(p->name) - 1] = '\0';
+    exec_set_name(p, path);
 
     /*
      * Switch TTBR0 to the new pagetable, then invalidate this ASID's
