@@ -271,6 +271,51 @@ static void console_rx_fault(uint32 cause)
     }
 }
 
+/* Caller holds cons_lock. */
+static void console_rubout(void)
+{
+    cons.e--;
+    console_echo('\b');
+}
+
+/* Caller holds cons_lock. */
+static void console_rx_char(int c)
+{
+    switch (c) {
+        case CTRL('U'):
+            /* kill line, erase back to start of input */
+            while (cons.e != cons.w
+                && cons.buf[(cons.e - 1) % INPUT_BUF_SIZE] != '\n') {
+                console_rubout();
+            }
+            break;
+        case CTRL('H'):
+        case '\x7f':
+            /* backspace */
+            if (cons.e != cons.w) {
+                console_rubout();
+            }
+            break;
+        default:
+            if (c != 0 && cons.e - cons.r < INPUT_BUF_SIZE) {
+                c = (c == '\r') ? '\n' : c;
+
+                console_echo(c);
+
+                cons.buf[cons.e++ % INPUT_BUF_SIZE] = c;
+
+                if (c == '\n'
+                    || c == CTRL('D')
+                    || cons.e - cons.r == INPUT_BUF_SIZE) {
+                    /* Complete line ready. Advance write index. */
+                    cons.w = cons.e;
+                    wakeup(&cons.r);
+                }
+            }
+            break;
+    }
+}
+
 /*
  * Called from trap_irq() when UART interrupt fires.
  * Drains all available characters from the UART
@@ -279,7 +324,7 @@ static void console_rx_fault(uint32 cause)
 void console_intr(void)
 {
     uint32 cause;
-    int drained, raw, c;
+    int drained, raw;
 
     acquire_spinlock(&cons_lock);
 
@@ -301,43 +346,7 @@ void console_intr(void)
             continue;
         }
 
-        c = raw & UART_DR_DATA;
-
-        switch (c) {
-            case CTRL('U'):
-                /* kill line, erase back to start of input */
-                while (cons.e != cons.w
-                    && cons.buf[(cons.e - 1) % INPUT_BUF_SIZE] != '\n') {
-                    cons.e--;
-                    console_echo('\b');
-                }
-                break;
-            case CTRL('H'):
-            case '\x7f':
-                /* backspace */
-                if (cons.e != cons.w) {
-                    cons.e--;
-                    console_echo('\b');
-                }
-                break;
-            default:
-                if (c != 0 && cons.e - cons.r < INPUT_BUF_SIZE) {
-                    c = (c == '\r') ? '\n' : c;
-
-                    console_echo(c);
-
-                    cons.buf[cons.e++ % INPUT_BUF_SIZE] = c;
-
-                    if (c == '\n'
-                        || c == CTRL('D')
-                        || cons.e - cons.r == INPUT_BUF_SIZE) {
-                        /* Complete line ready. Advance write index. */
-                        cons.w = cons.e;
-                        wakeup(&cons.r);
-                    }
-                }
-                break;
-        }
+        console_rx_char(raw & UART_DR_DATA);
     }
 
     release_spinlock(&cons_lock);
