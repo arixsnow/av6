@@ -37,6 +37,15 @@ struct fdt_tag {
     uint32 len;
 };
 
+struct fdt_imap {
+    const uint32 *map;
+    const uint32 *mask;
+    uint32 mapcells;
+    uint32 na;
+    uint32 ni;
+    uint32 key[FDT_MAX_IRQ_ARGS];
+};
+
 uint32 fdt32(uint32 v)
 {
     return ((v & 0xFF) << 24) | ((v & 0xFF00) << 8) | ((v & 0xFF0000) >> 8)
@@ -781,98 +790,134 @@ static uint32 fdt_irq_unit(const struct fdt *fdt, const struct fdt_node *node,
     return na;
 }
 
+static uint32 fdt_imap_mask(const struct fdt_imap *im, uint32 i)
+{
+    return (im->mask != NULL) ? fdt32(im->mask[i]) : ~0U;
+}
+
+static int fdt_imap_key(const struct fdt *fdt, const struct fdt_node *nexus,
+    const uint32 *addr, uint32 naddr, const struct fdt_irq *irq,
+    struct fdt_imap *im)
+{
+    uint32 len, mlen, m, i;
+
+    im->map = fdt_getprop(fdt, nexus, "interrupt-map", &len);
+    im->mask = fdt_getprop(fdt, nexus, "interrupt-map-mask", &mlen);
+
+    if (!fdt_prop_u32(fdt, nexus, "#address-cells", &im->na)) {
+        im->na = 2;
+    }
+
+    im->ni = irq->ncells;
+
+    if (im->map == NULL
+        || im->na > FDT_MAX_CELLS
+        || im->na + im->ni > FDT_MAX_IRQ_ARGS
+        || (im->mask != NULL && mlen != (im->na + im->ni) * 4)) {
+        return 0;
+    }
+
+    for (i = 0; i < im->na + im->ni; i++) {
+        m = fdt_imap_mask(im, i);
+
+        if (i < im->na && i >= naddr && m != 0) {
+            return 0;
+        }
+
+        if (i < im->na) {
+            im->key[i] = (i < naddr) ? addr[i] & m : 0;
+        } else {
+            im->key[i] = irq->cells[i - im->na] & m;
+        }
+    }
+
+    im->mapcells = len >> 2;
+
+    return 1;
+}
+
+static int fdt_imap_parent(const struct fdt *fdt, uint32 ph,
+    struct fdt_node *pnode, uint32 *pa, uint32 *pi)
+{
+    if (!fdt_node_by_phandle(fdt, ph, pnode)
+        || !fdt_prop_u32(fdt, pnode, "#interrupt-cells", pi)) {
+        return 0;
+    }
+
+    if (!fdt_prop_u32(fdt, pnode, "#address-cells", pa)) {
+        *pa = 0;
+    }
+
+    return (*pi >= 1 && *pa <= FDT_MAX_CELLS && *pa + *pi <= FDT_MAX_IRQ_ARGS);
+}
+
+static int fdt_imap_match(const struct fdt_imap *im, const uint32 *entry)
+{
+    for (uint32 i = 0; i < im->na + im->ni; i++) {
+        if ((fdt32(entry[i]) & fdt_imap_mask(im, i)) != im->key[i]) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+static void fdt_imap_take(const uint32 *out, uint32 pa, uint32 pi, uint32 *addr,
+    uint32 *naddr, struct fdt_irq *irq)
+{
+    for (uint32 i = 0; i < pa; i++) {
+        addr[i] = fdt32(out[i]);
+    }
+
+    for (uint32 i = 0; i < pi; i++) {
+        irq->cells[i] = fdt32(out[pa + i]);
+    }
+
+    *naddr = pa;
+    irq->ncells = pi;
+}
+
 /* 0: no usable entry. 1: move on to *parent. 2: the nexus maps to itself. */
 static int fdt_irq_map(const struct fdt *fdt, const struct fdt_node *nexus,
     uint32 *addr, uint32 *naddr, struct fdt_irq *irq, struct fdt_node *parent)
 {
-    const uint32 *map, *mask;
+    struct fdt_imap im;
     struct fdt_node pnode;
-    uint32 key[FDT_MAX_IRQ_ARGS];
-    uint32 len, mlen, na, ni, pa, pi, ph, seen, off, one, m, i;
+    const uint32 *entry;
+    uint32 child, pa, pi, ph, seen, off, one;
 
-    map = fdt_getprop(fdt, nexus, "interrupt-map", &len);
-    mask = fdt_getprop(fdt, nexus, "interrupt-map-mask", &mlen);
-
-    if (!fdt_prop_u32(fdt, nexus, "#address-cells", &na)) {
-        na = 2;
-    }
-
-    ni = irq->ncells;
-
-    if (map == NULL
-        || na > FDT_MAX_CELLS
-        || na + ni > FDT_MAX_IRQ_ARGS
-        || (mask != NULL && mlen != (na + ni) * 4)) {
+    if (!fdt_imap_key(fdt, nexus, addr, *naddr, irq, &im)) {
         return 0;
     }
 
-    for (i = 0; i < na + ni; i++) {
-        m = (mask != NULL) ? fdt32(mask[i]) : ~0U;
-
-        if (i < na && i >= *naddr && m != 0) {
-            return 0;
-        }
-
-        if (i < na) {
-            key[i] = (i < *naddr) ? addr[i] & m : 0;
-        } else {
-            key[i] = irq->cells[i - na] & m;
-        }
-    }
-
-    len >>= 2;
+    child = im.na + im.ni;
     seen = 0;
     pa = pi = 0;
 
-    for (off = 0; off + na + ni < len; off += one) {
-        ph = fdt32(map[off + na + ni]);
+    for (off = 0; off + child < im.mapcells; off += one) {
+        entry = im.map + off;
+        ph = fdt32(entry[child]);
 
         if (ph == 0 || ph == ~0U) {
             return 0;
         }
 
         if (ph != seen) {
-            if (!fdt_node_by_phandle(fdt, ph, &pnode)
-                || !fdt_prop_u32(fdt, &pnode, "#interrupt-cells", &pi)) {
-                return 0;
-            }
-
-            if (!fdt_prop_u32(fdt, &pnode, "#address-cells", &pa)) {
-                pa = 0;
-            }
-
-            if (pi < 1 || pa > FDT_MAX_CELLS || pa + pi > FDT_MAX_IRQ_ARGS) {
+            if (!fdt_imap_parent(fdt, ph, &pnode, &pa, &pi)) {
                 return 0;
             }
 
             seen = ph;
         }
 
-        one = na + ni + 1 + pa + pi;
+        one = child + 1 + pa + pi;
 
-        if (one > len - off) {
+        if (one > im.mapcells - off) {
             return 0;
         }
 
-        for (i = 0; i < na + ni; i++) {
-            m = (mask != NULL) ? fdt32(mask[i]) : ~0U;
-
-            if ((fdt32(map[off + i]) & m) != key[i]) {
-                break;
-            }
-        }
-
-        if (i == na + ni && fdt_node_is_available(fdt, &pnode)) {
-            for (i = 0; i < pa; i++) {
-                addr[i] = fdt32(map[off + na + ni + 1 + i]);
-            }
-
-            for (i = 0; i < pi; i++) {
-                irq->cells[i] = fdt32(map[off + na + ni + 1 + pa + i]);
-            }
-
-            *naddr = pa;
-            irq->ncells = pi;
+        if (fdt_imap_match(&im, entry) && fdt_node_is_available(fdt, &pnode)) {
+            fdt_imap_take(entry + child + 1, pa, pi, addr, naddr, irq);
             *parent = pnode;
 
             return (pnode.props == nexus->props) ? 2 : 1;
