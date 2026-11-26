@@ -343,8 +343,8 @@ void gic_init(void)
         gicd_write32(GICD_ICFGR(i >> 4), 0);
     }
 
-    for (i = GIC_SPI_BASE; i < gic_nirq; i += 4) {
-        gicd_write32(GICD_IPRIORITYR(i >> 2), 0x80808080U);
+    for (i = GIC_SPI_BASE; i < gic_nirq; i++) {
+        gic_irq_set_priority(i, GIC_PRIO_DEFAULT);
     }
 
     gic_wait_rwp();
