@@ -1,11 +1,16 @@
 # Build artifacts
-build*/
+/build*/
+
+# clangd index
+/.cache/
+
+# Reference source trees
+/*codebase
 
 # Internal Documentation
-notes/
-*codebase
+/notes/
 *.md
 !README.md
 
 # Internal Tools
-tools/*.py
+/tools/*.py
