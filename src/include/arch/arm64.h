@@ -12,11 +12,18 @@
 
 /* MPIDR_EL1 affinity: Aff3[39:32] | Aff2[23:16] | Aff1[15:8] | Aff0[7:0] */
 #define MPIDR_AFF_MASK     0xFF00FFFFFFUL
+#define MPIDR_AFF0_MASK    GENMASK(7, 0)
+#define MPIDR_AFF1_MASK    GENMASK(15, 8)
+#define MPIDR_AFF2_MASK    GENMASK(23, 16)
+#define MPIDR_AFF3_MASK    GENMASK(39, 32)
 
 #define DAIF_I             BIT(7)
 #define CTR_IMINLINE_SHIFT 0
 #define CTR_DMINLINE_SHIFT 16
 #define CTR_MINLINE_MASK   GENMASK(3, 0)
+
+#define TLBI_ASID_SHIFT    48
+#define TLBI_VA_SHIFT      12
 
 /*
  * Interrupt Control:
@@ -212,7 +219,10 @@ static inline void tlbi_vmalle1(void)
 static inline void tlbi_aside1is(uint64 asid)
 {
     dsb_ishst(); /* publish PTE writes first */
-    asm volatile("tlbi aside1is, %0" : : "r"(asid << 48) : "memory");
+    asm volatile("tlbi aside1is, %0"
+        :
+        : "r"(asid << TLBI_ASID_SHIFT)
+        : "memory");
     dsb_ish(); /* wait for the broadcast */
     isb();
 }
@@ -222,7 +232,7 @@ static inline void tlbi_vaae1is_range(uint64 va, uint64 npages)
     uint64 page, i;
 
     /* The TLBI operand is not an address, it is VA[55:12] */
-    page = va >> 12;
+    page = va >> TLBI_VA_SHIFT;
 
     dsb_ishst();
     for (i = 0; i < npages; i++) {

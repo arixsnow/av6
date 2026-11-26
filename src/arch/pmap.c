@@ -945,7 +945,7 @@ void switchuvm(uint16 asid, const pte_t *pagetable)
     KASSERT(pagetable != NULL, "switchuvm: no page table");
 
     pa = KVA_TO_PA((uintptr)pagetable);
-    ttbr = ((uint64)asid << 48) | pa;
+    ttbr = ((uint64)asid << TTBR_ASID_SHIFT) | pa;
 
     asm volatile("msr ttbr0_el1, %0" : : "r"(ttbr));
     isb();

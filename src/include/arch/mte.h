@@ -72,6 +72,7 @@
  * cores are independent.
  */
 #define RGSR_EL1_SEED_SHIFT 8
+#define RGSR_EL1_SEED_MASK  0xFFFFUL
 
 /*
  * ESR_EL1.ISS.DFSC value for a synchronous tag check fault

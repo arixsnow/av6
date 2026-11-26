@@ -49,7 +49,8 @@ void mte_init(void)
     asm volatile("mrs %0, mpidr_el1" : "=r"(mpidr));
 
     /* SEED[23:8] non-zero. The low Aff0 byte gives per-CPU divergence */
-    seed = (((mpidr & 0xff) + 1) & 0xffff) << RGSR_EL1_SEED_SHIFT;
+    seed = (((mpidr & MPIDR_AFF0_MASK) + 1) & RGSR_EL1_SEED_MASK)
+        << RGSR_EL1_SEED_SHIFT;
     seed |= 0x1; /* TAG[3:0] non-zero starting tag */
     asm volatile("msr rgsr_el1, %0" : : "r"(seed));
     isb();

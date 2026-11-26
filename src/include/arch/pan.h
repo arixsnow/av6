@@ -7,6 +7,7 @@
 #ifndef _AV6_PAN_H_
 #define _AV6_PAN_H_
 
+#include <arch/sysreg.h>
 #include <sys/types.h>
 
 /*
@@ -43,10 +44,7 @@
  */
 static inline int has_pan(void)
 {
-    uint64 mmfr1;
-
-    asm volatile("mrs %0, id_aa64mmfr1_el1" : "=r"(mmfr1));
-    return ((mmfr1 >> 20) & 0xF) != 0;
+    return SYS_FIELD(read_sysreg(id_aa64mmfr1_el1), ID_AA64MMFR1_PAN) != 0;
 }
 
 /*

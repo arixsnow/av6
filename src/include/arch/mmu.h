@@ -155,6 +155,9 @@
 #define TCR_ORGN1_WB_WA   (1UL << 26)
 #define TCR_SH1_INNER     (3UL << 28)
 
+/* TTBR0_EL1 / TTBR1_EL1 - Translation Table Base Registers */
+#define TTBR_ASID_SHIFT 48
+
 /* SCTLR_EL1 - System Control Register (core control bits) */
 #define SCTLR_EL1_M      (1UL << 0) /* MMU enable */
 #define SCTLR_EL1_A      (1UL << 1) /* Alignment fault check */

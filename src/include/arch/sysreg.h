@@ -57,6 +57,9 @@
 #define ID_AA64MMFR1_HAFDBS_AF     0x1
 #define ID_AA64MMFR1_HAFDBS_AF_DBS 0x2
 
+#define ID_AA64MMFR1_PAN_SHIFT     20
+#define ID_AA64MMFR1_PAN_WIDTH     4
+
 /* ID_AA64PFR0_EL1 : Processor Feature Register 0 */
 #define ID_AA64PFR0_RAS_SHIFT 28
 #define ID_AA64PFR0_RAS_WIDTH 4
