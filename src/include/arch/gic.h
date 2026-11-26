@@ -51,6 +51,7 @@ uint32 gic_nirqs(void);
  */
 #define GIC_PRIO_NMI     0x80
 #define GIC_PRIO_DEFAULT 0xA0
+#define GIC_PRIO_MASK    0xFFU
 
 /* Per-IRQ irqchip operations */
 void gic_irq_enable(uint32 irq);

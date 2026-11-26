@@ -65,6 +65,7 @@
 #define GICR_TYPER_OFF         0x008
 #define GICR_TYPER_VLPIS       (1UL << 1)
 #define GICR_TYPER_LAST        (1UL << 4)
+#define GICR_TYPER_AFF_SHIFT   32
 
 #define GICR_WAKER_OFF         0x014
 #define GICR_SGI_OFF           0x10000
@@ -77,6 +78,10 @@
 #define GICR_WAKER_CASLEEP     (1U << 2)
 
 #define ICC_CTLR_EOIMODE       (1U << 1)
+#define ICC_IAR1_INTID_MASK    0x3FFU
+#define ICC_SGI1R_SGIID_SHIFT  24
+#define ICC_SGI1R_SGIID_MASK   (0xFUL << ICC_SGI1R_SGIID_SHIFT)
+#define ICC_SGI1R_IRM          (1UL << 40)
 
 static uintptr gicd;
 static uint32 gic_nirq;
@@ -195,8 +200,8 @@ static void gic_wait_rwp(void)
  */
 static uint64 mpidr_to_affinity(uint64 mpidr)
 {
-    return ((mpidr >> 32) & 0xff) << 24 | ((mpidr >> 16) & 0xff) << 16
-        | ((mpidr >> 8) & 0xff) << 8 | (mpidr & 0xff);
+    return ((mpidr & MPIDR_AFF3_MASK) >> 8)
+        | (mpidr & (MPIDR_AFF2_MASK | MPIDR_AFF1_MASK | MPIDR_AFF0_MASK));
 }
 
 /* Find this CPU's redistributor */
@@ -209,7 +214,7 @@ static uintptr gicr_find(void)
     while (true) {
         typer = mmio_read64(frame + GICR_TYPER_OFF);
 
-        if (((typer >> 32) & 0xffffffffUL) == target) {
+        if ((typer >> GICR_TYPER_AFF_SHIFT) == target) {
             return frame;
         }
 
@@ -279,7 +284,7 @@ void gic_irq_set_priority(uint32 irq, uint8 prio)
         reg = gicr_base() + GICR_IPRIORITYR_OFF(irq / 4);
     }
 
-    mmio_clrsetbits32(reg, 0xFFU << shift, (uint32)prio << shift);
+    mmio_clrsetbits32(reg, GIC_PRIO_MASK << shift, (uint32)prio << shift);
 }
 
 void gic_irq_set_affinity(uint32 irq, uint64 aff)
@@ -329,9 +334,9 @@ void gic_init(void)
     gic_wait_rwp();
 
     for (i = GIC_SPI_BASE; i < gic_nirq; i += 32) {
-        gicd_write32(GICD_IGROUPR(i >> 5), 0xFFFFFFFFU);
-        gicd_write32(GICD_ICENABLER(i >> 5), 0xFFFFFFFFU);
-        gicd_write32(GICD_ICACTIVER(i >> 5), 0xFFFFFFFFU);
+        gicd_write32(GICD_IGROUPR(i >> 5), ~0U);
+        gicd_write32(GICD_ICENABLER(i >> 5), ~0U);
+        gicd_write32(GICD_ICACTIVER(i >> 5), ~0U);
     }
 
     for (i = GIC_SPI_BASE; i < gic_nirq; i += 16) {
@@ -383,7 +388,7 @@ void gic_inithart(void)
     icc_write_ctlr(icc_read_ctlr() | ICC_CTLR_EOIMODE);
 
     /* accept all priority levels */
-    icc_write_pmr(0xFF);
+    icc_write_pmr(GIC_PRIO_MASK);
 
     /* enable group 1 (non-secure) interrupts */
     icc_write_igrpen1(1);
@@ -423,7 +428,7 @@ void gic_inithart(void)
 
 uint32 gic_acknwlg(void)
 {
-    return icc_read_iar1() & 0x3FF;
+    return icc_read_iar1() & ICC_IAR1_INTID_MASK;
 }
 
 void gic_eoi(uint32 irq)
@@ -447,7 +452,8 @@ void gic_deactivate(uint32 irq)
  */
 void gic_send_sgi_all(uint32 intid)
 {
-    uint64 val = (1UL << 40) | ((uint64)(intid & 0xF) << 24);
+    uint64 val = ICC_SGI1R_IRM
+        | (((uint64)intid << ICC_SGI1R_SGIID_SHIFT) & ICC_SGI1R_SGIID_MASK);
 
     asm volatile("msr s3_0_c12_c11_5, %0" : : "r"(val) : "memory");
     isb();
