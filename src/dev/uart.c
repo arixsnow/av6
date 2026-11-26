@@ -73,16 +73,17 @@ void uart_config(uint32 uartclk)
     uint64 quot;
     uint32 rev, ibrd, i;
 
-    rev = (mmio_read32(UART_REG(UART_PIDR2)) >> 4) & 0xF;
+    rev = (mmio_read32(UART_REG(UART_PIDR2)) >> UART_PIDR2_REV_SHIFT)
+        & UART_PIDR2_REV_MASK;
     uart_fifo_depth = (rev >= 3) ? UART_FIFO_REV3 : UART_FIFO_REV2;
 
     quot = 0;
 
     if (uartclk != 0) {
         quot = (((uint64)uartclk << 2) + (UART_BAUD >> 1)) / UART_BAUD;
-        ibrd = (uint32)(quot >> 6);
+        ibrd = (uint32)(quot >> UART_FBRD_BITS);
 
-        if (ibrd == 0 || ibrd > 0xFFFF) {
+        if (ibrd == 0 || ibrd > UART_IBRD_MAX) {
             pr_warn("uart: %u Hz cannot reach %d baud, keeping firmware rate\n",
                 uartclk, UART_BAUD);
             quot = 0;
@@ -93,8 +94,8 @@ void uart_config(uint32 uartclk)
     mmio_write32(UART_REG(UART_CR), 0);
 
     if (quot != 0) {
-        mmio_write32(UART_REG(UART_IBRD), (uint32)(quot >> 6));
-        mmio_write32(UART_REG(UART_FBRD), (uint32)(quot & 0x3F));
+        mmio_write32(UART_REG(UART_IBRD), (uint32)(quot >> UART_FBRD_BITS));
+        mmio_write32(UART_REG(UART_FBRD), (uint32)(quot & UART_FBRD_MASK));
     }
 
     mmio_write32(UART_REG(UART_LCRH), UART_LCRH_WLEN8 | UART_LCRH_FEN);

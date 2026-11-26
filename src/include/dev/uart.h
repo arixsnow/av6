@@ -42,6 +42,11 @@
 #define UART_FR_RXFE BIT(4) /* Receive FIFO empty */
 #define UART_FR_TXFF BIT(5) /* Transmit FIFO full */
 
+/* Baud rate divisor: 16 integer bits, 6 fraction bits */
+#define UART_IBRD_MAX  0xFFFF
+#define UART_FBRD_BITS 6
+#define UART_FBRD_MASK 0x3F
+
 /* Line Control bits */
 #define UART_LCRH_FEN   BIT(4)   /* FIFO enable */
 #define UART_LCRH_WLEN8 (3 << 5) /* 8 data bits */
@@ -61,6 +66,10 @@
 
 /* Every interrupt the part can raise */
 #define UART_INTR_ALL 0x7FF
+
+/* Peripheral ID 2: revision in [7:4] */
+#define UART_PIDR2_REV_SHIFT 4
+#define UART_PIDR2_REV_MASK  0xF
 
 void uart_init(void);
 void uart_config(uint32 uartclk);
